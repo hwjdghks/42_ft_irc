@@ -22,6 +22,7 @@ public:
 	Server &operator=(const Server &ref);
 
 	bool pasreAndSetArguements(const char * const * argv);
+	void run(void) const;
 
 private:
 	in_port_t				port;

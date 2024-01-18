@@ -70,3 +70,11 @@ bool Server::init(int &server_socket) const
 		return false;
 	}
 }
+
+void Server::run(void) const
+{
+	int server_socket;
+
+	if (!this->init(server_socket))
+		return ;
+}
