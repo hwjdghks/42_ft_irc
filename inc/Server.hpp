@@ -1,3 +1,6 @@
+#ifndef SERVER_HPP
+#define SERVER_HPP
+
 #include <string>
 #include <vector>
 
@@ -22,3 +25,4 @@ private:
 	std::vector<Client>		clients;
 	int						max_clients;
 };
+#endif

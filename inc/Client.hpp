@@ -1,3 +1,6 @@
+#ifndef CLIENT_HPP
+#define CLIENT_HPP
+
 #include <string>
 #include <vector>
 
@@ -18,3 +21,4 @@ private:
 	int			fd;
 	int			last_connect_time;
 };
+#endif

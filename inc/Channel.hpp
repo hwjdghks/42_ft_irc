@@ -1,3 +1,6 @@
+#ifndef CHANNEL_HPP
+#define CHANNEL_HPP
+
 #include <string>
 #include <vector>
 
@@ -21,3 +24,4 @@ private:
 	std::vector<Client>			users;
 	std::vector<std::string>	invited;
 };
+#endif
