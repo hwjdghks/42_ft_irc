@@ -27,7 +27,7 @@ bool Server::pasreAndSetArguements(const char **argv)
 	confirm = std::strtol(argv[1], NULL, 10);
 	if (confirm < 0 || confirm > 65535)
 		return false;
-	this->port = static_cast<int>(confirm);
+	this->port = static_cast<in_port_t>(confirm);
 	for(const char *iter = argv[2]; iter && *iter; iter++)
 		if (!std::isprint(*iter))
 			return false;

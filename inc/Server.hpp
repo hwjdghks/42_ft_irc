@@ -19,7 +19,7 @@ public:
 	bool pasreAndSetArguements(const char **argv);
 
 private:
-	int						port;
+	in_port_t				port;
 	std::string				password;
 	std::vector<Channel>	channels;
 	std::vector<Client>		clients;
