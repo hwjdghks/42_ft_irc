@@ -3,9 +3,14 @@
 
 #include <string>
 #include <vector>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #include "Channel.hpp"
 #include "Client.hpp"
+
+#define BACKLOG 5 /* 어느 크기가 적당할지 */
 
 class Server
 {
@@ -24,5 +29,7 @@ private:
 	std::vector<Channel>	channels;
 	std::vector<Client>		clients;
 	int						max_clients;
+
+	bool init(int &serverSocket) const;
 };
 #endif
