@@ -13,6 +13,8 @@ public:
 
 	Server &operator=(const Server &ref);
 
+	bool pasreAndSetArguements(const char **argv);
+
 private:
 	int						port;
 	std::string				password;
