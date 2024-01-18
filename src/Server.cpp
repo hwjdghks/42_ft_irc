@@ -17,7 +17,7 @@ Server &Server::operator=(const Server &ref)
 	return *this;
 }
 
-bool Server::pasreAndSetArguements(const char **argv)
+bool Server::pasreAndSetArguements(const char * const * argv)
 {
 	long confirm;
 

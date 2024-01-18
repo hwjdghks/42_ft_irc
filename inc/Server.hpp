@@ -16,7 +16,7 @@ public:
 
 	Server &operator=(const Server &ref);
 
-	bool pasreAndSetArguements(const char **argv);
+	bool pasreAndSetArguements(const char * const * argv);
 
 private:
 	in_port_t				port;
