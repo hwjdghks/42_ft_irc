@@ -186,7 +186,11 @@ void Server::run(void)
 	while (true)
 	{
 		std::cout << "wait event... ";
-		int new_events_count = kevent(kq, NULL, 0, &event_list[0], MAX_CLIENT + 1, NULL);
+
+		timespec ts;
+		ts.tv_sec = 2;
+		ts.tv_nsec = 0;
+		int new_events_count = kevent(kq, NULL, 0, &event_list[0], MAX_CLIENT + 1, &ts);
 		switch (new_events_count)
 		{
 		case -1: /* Error occur */
@@ -194,6 +198,7 @@ void Server::run(void)
 			/* code */
 			break ;
 		case 0: /* kevent timeout */
+			std::cout << "timeout.\n";
 			/* code */
 			break ;
 		default:
