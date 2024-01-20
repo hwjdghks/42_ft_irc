@@ -5,12 +5,15 @@
 #include <vector>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/event.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "Channel.hpp"
 #include "Client.hpp"
 
 #define BACKLOG 5 /* 어느 크기가 적당할지 */
+#define MAX_CLIENT 10
 
 class Server
 {
@@ -22,7 +25,7 @@ public:
 	Server &operator=(const Server &ref);
 
 	bool pasreAndSetArguements(const char * const * argv);
-	void run(void) const;
+	void run(void);
 
 private:
 	in_port_t				port;
@@ -32,5 +35,8 @@ private:
 	int						max_clients;
 
 	bool init(int &serverSocket) const;
+	void addClient(const Client &new_client);
+	bool acceptClientSocket(const int &server_socket);
+	bool addEvent(const int &kq, struct kevent &change_event, const int &fd) const;
 };
 #endif
