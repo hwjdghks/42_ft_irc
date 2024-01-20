@@ -75,6 +75,7 @@ bool Server::addEvent(const int &kq, struct kevent &change_event, const int &fd)
 		/* kevent error */
 		return false;
 	}
+	return true;
 }
 
 bool Server::init(int &server_socket) const
