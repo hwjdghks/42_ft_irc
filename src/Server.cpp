@@ -41,7 +41,7 @@ void Server::addClient(const Client &new_client)
 	this->clients.push_back(new_client);
 }
 
-bool Server::acceptClientSocket(const int &server_socket)
+const int Server::acceptClientSocket(const int &server_socket)
 {
 	std::cout << "try accept... ";
 
@@ -215,7 +215,7 @@ void Server::run(void)
 				}
 				else if (current_event->ident == server_socket)
 				{
-					int client_socket = this->acceptClientSocket(server_socket);
+					const int client_socket = this->acceptClientSocket(server_socket);
 					if (client_socket == -1)
 					{
 						/* accept or fcntl Error */

@@ -36,7 +36,7 @@ private:
 
 	bool init(int &serverSocket) const;
 	void addClient(const Client &new_client);
-	bool acceptClientSocket(const int &server_socket);
+	const int acceptClientSocket(const int &server_socket);
 	bool addEvent(const int &kq, struct kevent &change_event, const int &fd) const;
 };
 #endif
