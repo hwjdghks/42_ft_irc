@@ -170,7 +170,7 @@ void Server::run(void)
 	/* server socket event apply */
 	struct kevent change_event;
 
-	if (this->addEvent(kq, change_event, server_socket))
+	if (!this->addEvent(kq, change_event, server_socket))
 	{
 		/* addEvent error */
 		/* sample code */
@@ -222,7 +222,7 @@ void Server::run(void)
 						return ;
 					}
 					std::cout << "Success!!\n";
-					if (this->addEvent(kq, change_event, client_socket))
+					if (!this->addEvent(kq, change_event, client_socket))
 					{
 						/* kevent Error */
 						return ;
