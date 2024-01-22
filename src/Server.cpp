@@ -251,8 +251,13 @@ void Server::run(void)
 							std::cout << "fail.\n";
 							break ;
 						}
-						else if (size == 0)
-						{}
+						else if (size == 0) /* peer has performed an orderly shutdown */
+						{
+							// EV_SET(&change_event, current_event->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+							// kevent(kq, &change_event, 1, NULL, 0, NULL);
+							close(current_event->ident); /* event 삭제 없이 close만 해도 되는가 */
+							this->delClient(current_event->ident);
+						}
 						else
 						{
 							buf[size] = '\0';
