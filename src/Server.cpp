@@ -273,6 +273,10 @@ void Server::run(void)
 							}
 						}
 					}
+					else
+					{
+						std::cout << "something happened..\n";
+					}
 				}
 			} /* event loop end */
 			break ;
