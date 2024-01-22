@@ -259,16 +259,17 @@ void Server::run(void)
 							std::cout << "from client fd: " << current_event->ident << ": " << buf << std::endl;
 							for (std::size_t idx = 0; idx <clients.size(); idx++)
 							{
-								if (this->clients[idx].getFd() == current_event->ident)
+								Client &current_client = this->clients[idx];
+								if (current_client.getFd() == current_event->ident)
 									continue ;
 								/* send message to other clients */
-								std::cout << "send to fd: " << this->clients[idx].getFd() << '\n';
+								std::cout << "send to fd: " << current_client.getFd() << '\n';
 								std::string sender;
 								sender = "send fd: ";
 								sender += std::to_string(current_event->ident);
 								sender += ": ";
 								sender += buf;
-								send(this->clients[idx].getFd(), sender.c_str(), strlen(sender.c_str()), 0);
+								send(current_client.getFd(), sender.c_str(), strlen(sender.c_str()), 0);
 							}
 						}
 					}
