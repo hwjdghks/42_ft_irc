@@ -36,12 +36,7 @@ bool Server::pasreAndSetArguements(const char * const * argv)
 	return true;
 }
 
-void Server::addClient(const Client &new_client)
-{
-	this->clients.push_back(new_client);
-}
-
-const int Server::acceptClientSocket(const int &server_socket)
+bool Server::addClient(const int &kq, const int &server_socket, struct kevent &change_event)
 {
 	std::cout << "try accept... ";
 
@@ -54,15 +49,26 @@ const int Server::acceptClientSocket(const int &server_socket)
 	{
 		std::cout << "fail.\n";
 		/* Error */
-		return -1;
+		return false;
 	}
 	if (fcntl(client_socket, F_SETFL, O_NONBLOCK) == -1)
 	{
 		std::cout << "fail.\n";
 		/* Error */
-		return -1;
+		return false;
 	}
-	return client_socket;
+	if (!this->addEvent(kq, change_event, client_socket))
+	{
+		/* kevent Error */
+		return false;
+	}
+	Client new_client;
+	
+	new_client.setFd(client_socket);
+	new_client.setAddr(client_addr);
+	new_client.setAddrLen(client_addr_len);
+	this->clients.push_back(new_client);
+	return true;
 }
 
 bool Server::addEvent(const int &kq, struct kevent &change_event, const int &fd) const
@@ -75,6 +81,29 @@ bool Server::addEvent(const int &kq, struct kevent &change_event, const int &fd)
 		/* kevent error */
 		return false;
 	}
+	return true;
+}
+
+const std::vector<Client>::const_iterator Server::searchClient(int fd) const
+{
+	std::vector<Client>::const_iterator it;
+
+	for(it = this->clients.begin(); it != this->clients.end(); it++)
+		if (it->getFd() == fd)
+			break ;
+	return it;
+}
+
+bool Server::delClient(int fd)
+{
+	std::vector<Client>::const_iterator it = this->searchClient(fd);
+
+	if (it == this->clients.end())
+	{
+		/* Error */
+		return false;
+	}
+	this->clients.erase(it);
 	return true;
 }
 
@@ -220,23 +249,7 @@ void Server::run(void)
 				}
 				else if (current_event->ident == server_socket)
 				{
-					const int client_socket = this->acceptClientSocket(server_socket);
-					if (client_socket == -1)
-					{
-						/* accept or fcntl Error */
-						return ;
-					}
-					std::cout << "Success!!\n";
-					if (!this->addEvent(kq, change_event, client_socket))
-					{
-						/* kevent Error */
-						return ;
-					}
-					std::cout << "Success!!\n";
-					Client new_client;
-
-					new_client.setFd(client_socket);
-					this->addClient(new_client);
+					this->addClient(kq, server_socket, change_event);
 				}
 				else
 				{

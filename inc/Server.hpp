@@ -35,8 +35,9 @@ private:
 	int						max_clients;
 
 	bool init(int &serverSocket) const;
-	void addClient(const Client &new_client);
-	const int acceptClientSocket(const int &server_socket);
 	bool addEvent(const int &kq, struct kevent &change_event, const int &fd) const;
+	bool addClient(const int &kq, const int &server_socket, struct kevent &change_event);
+	bool delClient(int fd);
+	const std::vector<Client>::const_iterator searchClient(int fd) const;
 };
 #endif
