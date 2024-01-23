@@ -36,7 +36,7 @@ bool Server::pasreAndSetArguements(const char * const * argv)
 	return true;
 }
 
-bool Server::addClient(const int &kq, const int &server_socket, struct kevent &change_event)
+bool Server::addClient(const int &kq, const int &server_socket)
 {
 	std::cout << "try accept... ";
 
@@ -55,7 +55,7 @@ bool Server::addClient(const int &kq, const int &server_socket, struct kevent &c
 		/* Error */
 		return false;
 	}
-	if (!this->addEvent(kq, change_event, client_socket))
+	if (!this->addReadEvent(kq, client_socket))
 	{
 		/* kevent Error */
 		return false;
@@ -67,11 +67,37 @@ bool Server::addClient(const int &kq, const int &server_socket, struct kevent &c
 	return true;
 }
 
-bool Server::addEvent(const int &kq, struct kevent &change_event, const int &fd) const
+bool Server::addReadEvent(const int &kq, const int &fd) const
 {
-	std::memset(&change_event, 0, sizeof(change_event));
-	EV_SET(&change_event, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
-	std::cout << "set client socket to kevent... " << std::flush;
+	struct kevent change_event;
+
+	EV_SET(&change_event, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	if (kevent(kq, &change_event, 1, NULL, 0, NULL) == -1)
+	{
+		/* kevent error */
+		return false;
+	}
+	return true;
+}
+
+bool Server::addTimerEvent(const int &kq, const int &fd, int second) const
+{
+	struct kevent change_event;
+
+	EV_SET(&change_event, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, second * 1000000, NULL);
+	if (kevent(kq, &change_event, 1, NULL, 0, NULL) == -1)
+	{
+		/* kevent error */
+		return false;
+	}
+	return true;
+}
+
+bool Server::delTimerEvent(const int &kq, const int &fd) const
+{
+	struct kevent change_event;
+
+	EV_SET(&change_event, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
 	if (kevent(kq, &change_event, 1, NULL, 0, NULL) == -1)
 	{
 		/* kevent error */
@@ -193,9 +219,8 @@ void Server::run(void)
 	}
 	std::cout << "Success!!\n";
 	/* server socket event apply */
-	struct kevent change_event;
 
-	if (!this->addEvent(kq, change_event, server_socket))
+	if (!this->addReadEvent(kq, server_socket))
 	{
 		/* addEvent error */
 		/* sample code */
@@ -245,7 +270,7 @@ void Server::run(void)
 				}
 				else if (current_event->ident == server_socket)
 				{
-					this->addClient(kq, server_socket, change_event);
+					this->addClient(kq, server_socket);
 				}
 				else
 				{
