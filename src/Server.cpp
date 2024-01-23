@@ -40,9 +40,7 @@ bool Server::addClient(const int &kq, const int &server_socket, struct kevent &c
 {
 	std::cout << "try accept... ";
 
-	sockaddr_in client_addr;
-	socklen_t client_addr_len = sizeof(client_addr);
-	const int client_socket = accept(server_socket, reinterpret_cast<sockaddr *>(&client_addr), &client_addr_len);
+	const int client_socket = accept(server_socket, NULL, NULL);
 
 	std::cout << "fd set: " << client_socket << ' ';
 	if (client_socket == -1)
