@@ -41,6 +41,14 @@ private:
 	bool delTimerEvent(const int &kq, const int &fd) const;
 	bool addToWaiting(const int &kq, const int &server_socket);
 	bool delClient(int fd);
-	const std::vector<Client>::const_iterator searchClient(int fd) const;
+    std::vector<Client>::const_iterator getCurrentClient(int fd, int *loc) const;
+	template <typename Iter>
+	Iter searchClient(Iter first, Iter last, int fd) const
+	{
+		for(; first != last; ++first)
+		 	if (first->getFd() == fd)
+				break ;
+		return first;
+	}
 };
 #endif

@@ -111,13 +111,22 @@ bool Server::delTimerEvent(const int &kq, const int &fd) const
 	return true;
 }
 
-const std::vector<Client>::const_iterator Server::searchClient(int fd) const
+std::vector<Client>::const_iterator Server::getCurrentClient(int fd, int *loc) const
 {
 	std::vector<Client>::const_iterator it;
+	int pos = -1;
 
-	for(it = this->clients.begin(); it != this->clients.end(); it++)
-		if (it->getFd() == fd)
-			break ;
+	it = this->searchClient(this->waiting_clients.begin(), this->waiting_clients.end(), fd);
+	if (it != waiting_clients.end())
+		pos = 1;
+	else
+	{
+		it = this->searchClient(this->clients.begin(), this->clients.end(), fd);
+		if (it != clients.end())
+			pos = 2;
+	}
+	if (loc)
+		*loc = pos;
 	return it;
 }
 
