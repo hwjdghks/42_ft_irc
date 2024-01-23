@@ -290,7 +290,7 @@ void Server::run(void)
 						if (size == -1)
 						{
 							/* recive error */
-							std::cout << "fail.\n";
+							std::cout << "recv fail.\n";
 							break ;
 						}
 						else
