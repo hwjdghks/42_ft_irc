@@ -32,6 +32,7 @@ private:
 	std::string				password;
 	std::vector<Channel>	channels;
 	std::vector<Client>		clients;
+	std::vector<Client>		waiting_clients;
 	int						max_clients;
 
 	bool init(int &serverSocket) const;

@@ -65,8 +65,6 @@ bool Server::addClient(const int &kq, const int &server_socket, struct kevent &c
 	Client new_client;
 	
 	new_client.setFd(client_socket);
-	new_client.setAddr(client_addr);
-	new_client.setAddrLen(client_addr_len);
 	this->clients.push_back(new_client);
 	return true;
 }
@@ -275,6 +273,8 @@ void Server::run(void)
 						{
 							buf[size] = '\0';
 							std::cout << "from client fd: " << current_event->ident << ": " << buf << std::endl;
+							// 명령어 파싱
+							// 명령어 분기
 							for (std::size_t idx = 0; idx <clients.size(); idx++)
 							{
 								Client &current_client = this->clients[idx];
