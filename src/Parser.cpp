@@ -16,11 +16,7 @@
 
     // Extracting command
     iss >> ircMessage.command;
-
-    // Checking whether command exists
-       // 가용한 command list는 어느 곳(class)에 저장할지?
-       // 존재하지 않는 command 입력 오류인 경우 ircMessage command에 특정값 설정하여 return? 
-       
+    std::transform(ircMessage.command.begin(), ircMessage.command.end(), ircMessage.command.begin(), ::toupper);       
 
     // Extracting parameters
     while (iss >> token) 
