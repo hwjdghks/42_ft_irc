@@ -36,7 +36,7 @@ bool Server::pasreAndSetArguements(const char * const * argv)
 	return true;
 }
 
-bool Server::addClient(const int &kq, const int &server_socket)
+bool Server::addToWaiting(const int &kq, const int &server_socket)
 {
 	std::cout << "try accept... ";
 
@@ -60,10 +60,15 @@ bool Server::addClient(const int &kq, const int &server_socket)
 		/* kevent Error */
 		return false;
 	}
+	if (!this->addTimerEvent(kq, client_socket, 20))
+	{
+		/* kevent Error */
+		return false;
+	}
 	Client new_client;
 	
 	new_client.setFd(client_socket);
-	this->clients.push_back(new_client);
+	this->waiting_clients.push_back(new_client);
 	return true;
 }
 
@@ -267,7 +272,7 @@ void Server::run(void)
 				}
 				else if (current_event->ident == server_socket)
 				{
-					this->addClient(kq, server_socket);
+					this->addToWaiting(kq, server_socket);
 				}
 				else
 				{

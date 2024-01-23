@@ -39,7 +39,7 @@ private:
 	bool addReadEvent(const int &kq, const int &fd) const;
 	bool addTimerEvent(const int &kq, const int &fd, int second) const;
 	bool delTimerEvent(const int &kq, const int &fd) const;
-	bool addClient(const int &kq, const int &server_socket);
+	bool addToWaiting(const int &kq, const int &server_socket);
 	bool delClient(int fd);
 	const std::vector<Client>::const_iterator searchClient(int fd) const;
 };
