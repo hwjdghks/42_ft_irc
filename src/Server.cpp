@@ -317,6 +317,20 @@ void Server::run(void)
 							buf[size] = '\0';
 							// 명령어 파싱
 							// 명령어 분기
+							int loc;
+							Client current_client = *this->getCurrentClient(current_event->ident, &loc);
+							switch (loc)
+							{
+							case 1: /* waiting list */
+								/* code */
+								break;
+							case 2: /* join client list */
+								/* code */
+								break;
+							default: 
+								/* Error */
+								break;
+							}
 						}
 					}
 					else
