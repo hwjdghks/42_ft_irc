@@ -287,9 +287,9 @@ void Server::run(void)
 					{}
 					else
 					{}
-					break ; /* <= test code */
+					continue ; /* Error handling end */
 				}
-				else if (current_event->ident == server_socket)
+				if (current_event->ident == server_socket)
 				{
 					this->addToWaiting(kq, server_socket);
 				}
@@ -303,6 +303,7 @@ void Server::run(void)
 							/* need reply? */
 							close(current_event->ident);
 							this->delClient(current_event->ident);
+							continue ; /* Error handling end */
 						}
 						char buf[4096];
 						int size = recv(current_event->ident, &buf, sizeof(buf), 0);
