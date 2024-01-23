@@ -132,14 +132,24 @@ std::vector<Client>::const_iterator Server::getCurrentClient(int fd, int *loc) c
 
 bool Server::delClient(int fd)
 {
-	std::vector<Client>::const_iterator it = this->searchClient(fd);
+	int loc;
+	std::vector<Client>::const_iterator it = this->getCurrentClient(fd, &loc);
+	std::cout << "find!\n";
 
-	if (it == this->clients.end())
+	switch (loc)
 	{
+	case 1:
+		/* code */
+		this->waiting_clients.erase(it);
+		break;
+	case 2:
+		/* code */
+		this->clients.erase(it);
+		break;
+	default:
 		/* Error */
 		return false;
 	}
-	this->clients.erase(it);
 	return true;
 }
 
