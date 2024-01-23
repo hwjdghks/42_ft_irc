@@ -273,6 +273,13 @@ void Server::run(void)
 				{
 					if (current_event->filter == EVFILT_READ)
 					{
+						if (current_event->flags & EV_EOF) /* socket close */
+						{
+							/* Equal to recv() return value is 0 */
+							/* need reply? */
+							close(current_event->ident);
+							this->delClient(current_event->ident);
+						}
 						char buf[4096];
 						int size = recv(current_event->ident, &buf, sizeof(buf), 0);
 						if (size == -1)
@@ -280,13 +287,6 @@ void Server::run(void)
 							/* recive error */
 							std::cout << "fail.\n";
 							break ;
-						}
-						else if (size == 0) /* peer has performed an orderly shutdown */
-						{
-							// EV_SET(&change_event, current_event->ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-							// kevent(kq, &change_event, 1, NULL, 0, NULL);
-							close(current_event->ident); /* event 삭제 없이 close만 해도 되는가 */
-							this->delClient(current_event->ident);
 						}
 						else
 						{
