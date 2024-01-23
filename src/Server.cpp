@@ -223,10 +223,7 @@ void Server::run(void)
 	if (!this->addReadEvent(kq, server_socket))
 	{
 		/* addEvent error */
-		/* sample code */
 		std::cout << "fail.\n";
-		close(kq);
-		close(server_socket);
 		return ;
 	}
 	std::cout << "Success!!\n";
@@ -274,10 +271,9 @@ void Server::run(void)
 				}
 				else
 				{
-					char buf[4096];
-
 					if (current_event->filter == EVFILT_READ)
 					{
+						char buf[4096];
 						int size = recv(current_event->ident, &buf, sizeof(buf), 0);
 						if (size == -1)
 						{
@@ -295,23 +291,8 @@ void Server::run(void)
 						else
 						{
 							buf[size] = '\0';
-							std::cout << "from client fd: " << current_event->ident << ": " << buf << std::endl;
 							// 명령어 파싱
 							// 명령어 분기
-							for (std::size_t idx = 0; idx <clients.size(); idx++)
-							{
-								Client &current_client = this->clients[idx];
-								if (current_client.getFd() == current_event->ident)
-									continue ;
-								/* send message to other clients */
-								std::cout << "send to fd: " << current_client.getFd() << '\n';
-								std::string sender;
-								sender = "send fd: ";
-								sender += std::to_string(current_event->ident);
-								sender += ": ";
-								sender += buf;
-								send(current_client.getFd(), sender.c_str(), strlen(sender.c_str()), 0);
-							}
 						}
 					}
 					else
