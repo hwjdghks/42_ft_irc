@@ -111,9 +111,9 @@ bool Server::delTimerEvent(const int &kq, const int &fd) const
 	return true;
 }
 
-std::vector<Client>::const_iterator Server::getCurrentClient(int fd, int *loc) const
+std::vector<Client>::iterator Server::getCurrentClient(int fd, int *loc)
 {
-	std::vector<Client>::const_iterator it;
+	std::vector<Client>::iterator it;
 	int pos = -1;
 
 	it = this->searchClient(this->waiting_clients.begin(), this->waiting_clients.end(), fd);
@@ -133,7 +133,7 @@ std::vector<Client>::const_iterator Server::getCurrentClient(int fd, int *loc) c
 bool Server::delClient(int fd)
 {
 	int loc;
-	std::vector<Client>::const_iterator it = this->getCurrentClient(fd, &loc);
+	std::vector<Client>::iterator it = this->getCurrentClient(fd, &loc);
 	std::cout << "find!\n";
 
 	switch (loc)
@@ -319,7 +319,7 @@ void Server::run(void)
 							// 명령어 파싱
 							// 명령어 분기
 							int loc;
-							Client current_client = *this->getCurrentClient(current_event->ident, &loc);
+							Client &current_client = *this->getCurrentClient(current_event->ident, &loc);
 							switch (loc)
 							{
 							case 1: /* waiting list */
