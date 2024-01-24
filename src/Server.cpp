@@ -60,7 +60,7 @@ bool Server::addToWaiting(const int &kq, const int &server_socket)
 		/* kevent Error */
 		return false;
 	}
-	if (!this->addTimerEvent(kq, client_socket, 20))
+	if (!this->addTimerEvent(kq, client_socket, REGISTER_TIMEOUT_LIMIT))
 	{
 		/* kevent Error */
 		return false;
@@ -89,7 +89,7 @@ bool Server::addTimerEvent(const int &kq, const int &fd, int second) const
 {
 	struct kevent change_event;
 
-	EV_SET(&change_event, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, second * 1000000, NULL);
+	EV_SET(&change_event, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, second * 1000, NULL);
 	if (kevent(kq, &change_event, 1, NULL, 0, NULL) == -1)
 	{
 		/* kevent error */
@@ -159,7 +159,7 @@ void Server::moveToClients(int kq, int fd)
 	std::vector<Client>::iterator it = this->searchClient(this->waiting_clients.begin(), this->waiting_clients.end(), fd);
 	this->clients.push_back(*it);
 	this->waiting_clients.erase(it);
-	this->addTimerEvent(kq, fd, 120);
+	this->addTimerEvent(kq, fd, CONNECT_TIMEOUT_LIMIT);
 }
 
 bool Server::init(int &server_socket) const
@@ -332,10 +332,15 @@ void Server::run(void)
 							switch (loc)
 							{
 							case 1: /* waiting list */
+								std::cout << "move to regular list.\n";
+								this->moveToClients(kq, current_client.getFd());
 								/* code */
 								break;
 							case 2: /* join client list */
 								/* code */
+								std::cout << "regular event\n";
+								/* update last connect */
+								this->addTimerEvent(kq, current_event->ident, CONNECT_TIMEOUT_LIMIT);
 								break;
 							default:
 								/* Error */
@@ -343,13 +348,40 @@ void Server::run(void)
 							}
 						}
 					}
-					else
+					else if (current_event->filter == EVFILT_TIMER)
 					{
-						std::cout << "something happened..\n";
+						if (current_event->flags & EV_EOF) /* socket close */
+						{
+							/* Equal to recv() return value is 0 */
+							/* need reply? */
+							close(current_event->ident);
+							this->delClient(current_event->ident);
+							continue ; /* Error handling end */
+						}
+						int loc;
+						Client &current_client = *this->getCurrentClient(current_event->ident, &loc);
+						switch (loc)
+						{
+						case 1: /* waiting list */
+							std::cout << "register fail.\n";
+							close(current_client.getFd());
+							this->delClient(current_client.getFd());
+							/* code */
+							break;
+						case 2: /* join client list */
+							/* timeout test */
+							std::cout << "client timeout check test\n";
+							this->addTimerEvent(kq, current_client.getFd(), PINGPONG_TIMEOUT_LIMIT);
+							/* code */
+							break;
+						default:
+							/* Error */
+							break;
+						}
 					}
-				}
-			} /* event loop end */
-			break ;
-		} /* switch case end */
-	} /* infinite loop end */
+				} /* event loop end */
+				break ;
+			} /* switch case end */
+		} /* infinite loop end */
+	}
 }
