@@ -71,58 +71,64 @@ IRCMessage Server::parseMessage(const char message[])
 
 void Server::handleMessage(const IRCMessage& message, const int& fd)
 {
-	std::vector<Client>::const_iterator const_it = searchClient(fd);
-	Client* current_client = const_cast<Client*>(&(*const_it));
 
-	if (message.command == "USER")
-    {
-        if (message.parameters.size() >= 4)
-        {
-            if ( current_client->getusername() != "")
-            {
-                //RPL reregister;
-            }
-            else
-            {
-                current_client->setusername(message.parameters[0]);
-            }
-        }
-        else
-        {
-            //RPL 461 :Not enought parameters;
-        }
-    }
-    else if (message.command == "PASS")
-    {
-        if (message.parameters.size() == 0)
-        {
-            //RPL 461 :Not enought parameters;
-        }
-        else
-        {
-            current_client->setpassword(message.parameters[0]);
-        }
-    }
-    else if (message.command == "NICK")
-    {
-        if (message.parameters.size() == 0)
-        {
-            //RPL 461 :Not enought parameters;
-        }
-        else if (같은 nick이 이미 존재할 경우)
-        {
-            //RPL 433 :Nickname is already in use;
-        }
-        else if (사용할 수 없는 nick 일 경우)
-        {
-            //RPL 432 :Erroneous Nickname;
-        }
-        else
-        {
-            current_client->setnickname(message.parameters[0]);
-        }
-    }
-    
+				// std::vector<Client>::const_iterator const_it = searchClient(fd); //
+				// Client* current_client = const_cast<Client*>(&(*const_it));
+
+	//wait_client_list에서 해당 client instance search
+	std::vector<Client>::iterator current_client = search_waiting_Client(fd);
+
+	if (current_client != waiting_clients.end()) //CASE1 <-  등록 전 user
+	{	
+		if (message.command == "USER")
+		{
+			if (message.parameters.size() >= 4)
+			{
+				if ( current_client->getusername() != "")
+				{
+					//RPL reregister;
+				}
+				else
+				{
+					current_client->setusername(message.parameters[0]);
+				}
+			}
+			else
+			{
+				//RPL 461 :Not enought parameters;
+			}
+		}
+		else if (message.command == "PASS")
+		{
+			if (message.parameters.size() == 0)
+			{
+				//RPL 461 :Not enought parameters;
+			}
+			else
+			{
+				current_client->setpassword(message.parameters[0]);
+			}
+		}
+		else if (message.command == "NICK")
+		{
+			if (message.parameters.size() == 0)
+			{
+				//RPL 461 :Not enought parameters;
+			}
+			else if (같은 nick이 이미 존재할 경우) //client_list와 waiting_client_list 양쪽 instance들 중 자신을 제외한 instance와 nick 중복 여부 확인
+			{
+				//RPL 433 :Nickname is already in use;
+			}
+			else if (사용할 수 없는 nick 일 경우) // length 9-30 사이, alphanumeric and underscore and hyphens, No space and non-printable char
+			{
+				//RPL 432 :Erroneous Nickname;
+			}
+			else
+			{
+				current_client->setnickname(message.parameters[0]);
+			}
+		}
+	}
 }
 
 
@@ -180,6 +186,16 @@ const std::vector<Client>::const_iterator Server::searchClient(int fd) const
 		if (it->getFd() == fd)
 			break ;
 	return it;
+}
+
+std::vector<Client>::iterator Server::search_waiting_Client(int fd)
+{
+	std::vector<Client>::iterator it;
+
+	for(it = this->waiting_clients.begin(); it != this->waiting_clients.end(); it++)
+		if (it->getFd() == fd)
+			break ;
+	return it;	
 }
 
 bool Server::delClient(int fd)

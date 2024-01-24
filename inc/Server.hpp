@@ -48,6 +48,7 @@ private:
 	bool addClient(const int &kq, const int &server_socket, struct kevent &change_event);
 	bool delClient(int fd);
 	const std::vector<Client>::const_iterator searchClient(int fd) const;
+	std::vector<Client>::iterator search_waiting_Client(int fd);
 	std::string str_toupper(std::string s);
 	IRCMessage parseMessage(const char message[]);
 	void handleMessage(const IRCMessage& message, const int& fd);
