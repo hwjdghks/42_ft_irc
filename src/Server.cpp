@@ -153,6 +153,15 @@ bool Server::delClient(int fd)
 	return true;
 }
 
+void Server::moveToClients(int kq, int fd)
+{
+	this->delTimerEvent(kq, fd);
+	std::vector<Client>::iterator it = this->searchClient(this->waiting_clients.begin(), this->waiting_clients.end(), fd);
+	this->clients.push_back(*it);
+	this->waiting_clients.erase(it);
+	this->addTimerEvent(kq, fd, 120);
+}
+
 bool Server::init(int &server_socket) const
 {
 	std::cout << "Create Server socket... ";
