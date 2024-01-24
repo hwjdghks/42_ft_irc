@@ -51,6 +51,9 @@ private:
 	std::vector<Client>::iterator search_waiting_Client(int fd);
 	std::string str_toupper(std::string s);
 	IRCMessage parseMessage(const char message[]);
+
+	bool isValidChar(const char c);
+	bool isValidNick(const std::string& str);
 	void handleMessage(const IRCMessage& message, const int& fd);
 };
 #endif

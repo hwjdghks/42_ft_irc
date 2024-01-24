@@ -69,6 +69,17 @@ IRCMessage Server::parseMessage(const char message[])
 	return ircMessage;
 }
 
+bool Server::isValidChar(const char c) 
+{
+    return (std::isalnum(c) || c == '-' || c == '_') && std::isprint(c) && !std::isspace(c);
+}
+
+// Function to check if a string is valid
+bool Server::isValidNick(const std::string& str) 
+{
+    return std::all_of(str.begin(), str.end(), isValidChar);
+}
+
 void Server::handleMessage(const IRCMessage& message, const int& fd)
 {
 
@@ -119,7 +130,7 @@ void Server::handleMessage(const IRCMessage& message, const int& fd)
 			{
 				//RPL 433 :Nickname is already in use;
 			}
-			else if (사용할 수 없는 nick 일 경우) // length 9-30 사이, alphanumeric and underscore and hyphens, No space and non-printable char
+			else if (message.parameters[0].size() >= 9 && message.parameters[0].size() <= 30 && isValidNick(message.parameters[0]))
 			{
 				//RPL 432 :Erroneous Nickname;
 			}
