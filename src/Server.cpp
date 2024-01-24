@@ -36,6 +36,40 @@ bool Server::pasreAndSetArguements(const char * const * argv)
 	return true;
 }
 
+std::string Server::str_toupper(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+    return s;
+}
+
+IRCMessage Server::parseMessage(const char message[])
+{
+	IRCMessage ircMessage;
+	
+	std::istringstream iss(message);
+	std::string token;
+
+// Extracting prefix
+if (message[0] == ':') 
+	{
+	iss >> token;
+	ircMessage.prefix = token.substr(1);
+	}
+
+// Extracting command
+iss >> token;
+ircMessage.command = str_toupper(token);
+
+// Extracting parameters
+while (iss >> token) 
+{
+	ircMessage.parameters.push_back(token);
+}
+
+return ircMessage;
+}
+
+
 bool Server::addClient(const int &kq, const int &server_socket, struct kevent &change_event)
 {
 	std::cout << "try accept... ";
@@ -274,6 +308,10 @@ void Server::run(void)
 							buf[size] = '\0';
 							std::cout << "from client fd: " << current_event->ident << ": " << buf << std::endl;
 							// 명령어 파싱
+							IRCMessage message;
+							message = parseMessage(buf);
+							//clear message.parameter?
+
 							// 명령어 분기
 							for (std::size_t idx = 0; idx <clients.size(); idx++)
 							{

@@ -8,12 +8,20 @@
 #include <sys/event.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sstream>
 
 #include "Channel.hpp"
 #include "Client.hpp"
 
 #define BACKLOG 5 /* 어느 크기가 적당할지 */
 #define MAX_CLIENT 10
+
+struct IRCMessage 
+{
+	std::string prefix;
+	std::string command;
+	std::vector <std::string> parameters;
+};
 
 class Server
 {
@@ -40,5 +48,7 @@ private:
 	bool addClient(const int &kq, const int &server_socket, struct kevent &change_event);
 	bool delClient(int fd);
 	const std::vector<Client>::const_iterator searchClient(int fd) const;
+	std::string str_toupper(std::string s);
+	IRCMessage parseMessage(const char message[]);
 };
 #endif
