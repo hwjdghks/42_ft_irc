@@ -42,7 +42,7 @@ bool Server::addToWaiting(const int &kq, const int &server_socket)
 
 	const int client_socket = accept(server_socket, NULL, NULL);
 
-	std::cout << "fd set: " << client_socket << '\n';
+	std::cout << "fd set: " << client_socket << ' ';
 	if (client_socket == -1)
 	{
 		std::cout << "fail.\n";
@@ -69,6 +69,7 @@ bool Server::addToWaiting(const int &kq, const int &server_socket)
 	
 	new_client.setFd(client_socket);
 	this->waiting_clients.push_back(new_client);
+	std::cout << "Success!!\n";
 	return true;
 }
 
