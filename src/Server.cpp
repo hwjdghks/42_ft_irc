@@ -266,6 +266,7 @@ void Server::run(void)
 			std::cout << "Success!!\n";
 
 			struct kevent *current_event;
+			struct IRCMessage message;
 			for (int idx = 0; idx < new_events_count; idx++)
 			{
 				current_event = &event_list[idx];
@@ -308,9 +309,7 @@ void Server::run(void)
 							buf[size] = '\0';
 							std::cout << "from client fd: " << current_event->ident << ": " << buf << std::endl;
 							// 명령어 파싱
-							IRCMessage message;
 							message = parseMessage(buf);
-							//clear message.parameter?
 
 							// 명령어 분기
 							for (std::size_t idx = 0; idx <clients.size(); idx++)
@@ -334,6 +333,7 @@ void Server::run(void)
 						std::cout << "something happened..\n";
 					}
 				}
+				//clear message(?) -- consider message struct value reset especially vector clear  
 			} /* event loop end */
 			break ;
 		} /* switch case end */
