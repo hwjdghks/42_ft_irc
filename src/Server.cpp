@@ -42,7 +42,7 @@ bool Server::addToWaiting(const int &kq, const int &server_socket)
 
 	const int client_socket = accept(server_socket, NULL, NULL);
 
-	std::cout << "fd set: " << client_socket << ' ';
+	std::cout << "fd set: " << client_socket << '\n';
 	if (client_socket == -1)
 	{
 		std::cout << "fail.\n";
@@ -337,7 +337,7 @@ void Server::run(void)
 							case 2: /* join client list */
 								/* code */
 								break;
-							default: 
+							default:
 								/* Error */
 								break;
 							}
