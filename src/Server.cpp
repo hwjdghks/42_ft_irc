@@ -49,24 +49,80 @@ IRCMessage Server::parseMessage(const char message[])
 	std::istringstream iss(message);
 	std::string token;
 
-// Extracting prefix
-if (message[0] == ':') 
-	{
+	// Extracting prefix
+	if (message[0] == ':') 
+		{
+		iss >> token;
+		ircMessage.prefix = token.substr(1);
+		}
+
+	// Extracting command
 	iss >> token;
-	ircMessage.prefix = token.substr(1);
+	ircMessage.command = str_toupper(token);
+
+	// Extracting parameters
+	while (iss >> token) 
+	{
+		ircMessage.parameters.push_back(token);
 	}
 
-// Extracting command
-iss >> token;
-ircMessage.command = str_toupper(token);
-
-// Extracting parameters
-while (iss >> token) 
-{
-	ircMessage.parameters.push_back(token);
+	return ircMessage;
 }
 
-return ircMessage;
+void Server::handleMessage(const IRCMessage& message, const int& fd)
+{
+	std::vector<Client>::const_iterator const_it = searchClient(fd);
+	Client* current_client = const_cast<Client*>(&(*const_it));
+
+	if (message.command == "USER")
+    {
+        if (message.parameters.size() >= 4)
+        {
+            if ( current_client->getusername() != "")
+            {
+                //RPL reregister;
+            }
+            else
+            {
+                current_client->setusername(message.parameters[0]);
+            }
+        }
+        else
+        {
+            //RPL 461 :Not enought parameters;
+        }
+    }
+    else if (message.command == "PASS")
+    {
+        if (message.parameters.size() == 0)
+        {
+            //RPL 461 :Not enought parameters;
+        }
+        else
+        {
+            current_client->setpassword(message.parameters[0]);
+        }
+    }
+    else if (message.command == "NICK")
+    {
+        if (message.parameters.size() == 0)
+        {
+            //RPL 461 :Not enought parameters;
+        }
+        else if (같은 nick이 이미 존재할 경우)
+        {
+            //RPL 433 :Nickname is already in use;
+        }
+        else if (사용할 수 없는 nick 일 경우)
+        {
+            //RPL 432 :Erroneous Nickname;
+        }
+        else
+        {
+            current_client->setnickname(message.parameters[0]);
+        }
+    }
+    
 }
 
 
@@ -312,6 +368,9 @@ void Server::run(void)
 							message = parseMessage(buf);
 
 							// 명령어 분기
+							handleMessage(message, current_event->ident);
+
+
 							for (std::size_t idx = 0; idx <clients.size(); idx++)
 							{
 								Client &current_client = this->clients[idx];

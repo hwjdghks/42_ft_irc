@@ -50,5 +50,6 @@ private:
 	const std::vector<Client>::const_iterator searchClient(int fd) const;
 	std::string str_toupper(std::string s);
 	IRCMessage parseMessage(const char message[]);
+	void handleMessage(const IRCMessage& message, const int& fd);
 };
 #endif
