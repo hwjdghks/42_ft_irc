@@ -18,6 +18,28 @@ Server &Server::operator=(const Server &ref)
 	return *this;
 }
 
+void Server::stop(int kq, int server_socket)
+{
+	for (std::vector<Channel>::iterator it = this->channels.begin(); it != this->channels.end(); it++)
+	{
+		/* channel operators and clients delete */
+	}
+	this->channels.clear();
+	for (std::vector<Client>::iterator it = this->waiting_clients.begin(); it != this->waiting_clients.end(); it++)
+	{
+		close(it->getFd());
+	}
+	this->waiting_clients.clear();
+	for (std::vector<Client>::iterator it = this->clients.begin(); it != this->clients.end(); it++)
+	{
+		close(it->getFd());
+	}
+	this->clients.clear();
+	close(kq);
+	close(server_socket);
+	/* need close error handling? */
+}
+
 bool Server::pasreAndSetArguements(const char * const * argv)
 {
 	long confirm;

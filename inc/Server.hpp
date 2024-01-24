@@ -54,5 +54,6 @@ private:
 				break ;
 		return first;
 	}
+	void stop(int kq, int server_socket);
 };
 #endif
