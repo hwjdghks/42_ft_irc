@@ -58,134 +58,38 @@ bool Server::pasreAndSetArguements(const char * const * argv)
 	return true;
 }
 
-std::string Server::str_toupper(std::string s)
-{
-    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
-    return s;
-}
-
-IRCMessage Server::parseMessage(const char message[])
-{
-	IRCMessage ircMessage;
-	
-	std::istringstream iss(message);
-	std::string token;
-
-	// Extracting prefix
-	if (message[0] == ':') 
-		{
-		iss >> token;
-		ircMessage.prefix = token.substr(1);
-		}
-
-	// Extracting command
-	iss >> token;
-	ircMessage.command = str_toupper(token);
-
-	// Extracting parameters
-	while (iss >> token) 
-	{
-		ircMessage.parameters.push_back(token);
-	}
-
-	return ircMessage;
-}
-
-bool Server::isValidChar(const char c) 
-{
-    return (std::isalnum(c) || c == '-' || c == '_') && std::isprint(c) && !std::isspace(c);
-}
-
-bool Server::isValidNick(const std::string& str) 
-{
-    return std::all_of(str.begin(), str.end(), isValidChar);
-}
-
-//client와 waiting_client들 중 자신을 제외한 instance와 nick 중복 여부 확인
-bool Server::isDupNick(const std::string &nick, const int &fd)
-{
-	std::vector<Client>::iterator it;
-
-	//check resigstered clients
-	for(it = this->clients.begin(); it != this->clients.end(); it++)
-		if (it->getFd() != fd && it->getnickname() == nick)
-			return true;
-	//check waiting clients	
-	for(it = this->waiting_clients.begin(); it != this->waiting_clients.end(); it++)
-		if (it->getFd() != fd && it->getnickname() == nick)
-			return true;
-
-	return false
-}
-
-void Server::handleMessage(const IRCMessage &message, const int &fd)
-{
-
-				// std::vector<Client>::const_iterator const_it = searchClient(fd); //
-				// Client* current_client = const_cast<Client*>(&(*const_it));
-
-	//wait_client_list에서 해당 client instance search
-	std::vector<Client>::iterator current_client = searchWaitingClient(fd);
-
-	if (current_client != waiting_clients.end()) //CASE1 <-  등록 전 user
-	{	
-		if (message.command == "USER")
-		{
-			if (message.parameters.size() >= 4)
-			{
-				if ( current_client->getusername() != "")
-				{
-					//RPL reregister;
-				}
-				else
-				{
-					current_client->setusername(message.parameters[0]);
-				}
-			}
-			else
-			{
-				//RPL 461 :Not enought parameters;
-			}
-		}
-		else if (message.command == "PASS")
-		{
-			if (message.parameters.size() == 0)
-			{
-				//RPL 461 :Not enought parameters;
-			}
-			else
-			{
-				current_client->setpassword(message.parameters[0]);
-			}
-		}
-		if (message.command == "NICK")
-		{
-			if (message.parameters.size() == 0)
-			{
-				//RPL 461 :Not enought parameters;
-			}
-			else if (isDupNick(fd, message.parameters[0])) // nick 중복 여부 확인
-			{
-				//RPL 433 :Nickname is already in use;
-			}
-			else if (message.parameters[0].size() >= 9 && message.parameters[0].size() <= 30 && isValidNick(message.parameters[0]))
-			{
-				//RPL 432 :Erroneous Nickname;
-			}
-			else
-			{
-				current_client->setnickname(message.parameters[0]);
-			}
-		}
-		else if (message.command가 가용 command list상에 있으면)
-		{
-			//RPL :Not registered user yet
-		}
-	}
-}
-
-
 bool Server::addClient(const int &kq, const int &server_socket, struct kevent &change_event)
+{
+	std::cout << "try accept... ";
+
+	sockaddr_in client_addr;
+	socklen_t client_addr_len = sizeof(client_addr);
+	const int client_socket = accept(server_socket, reinterpret_cast<sockaddr *>(&client_addr), &client_addr_len);
+
+	std::cout << "fd set: " << client_socket << ' ';
+	if (client_socket == -1)
+	{
+		std::cout << "fail.\n";
+		/* Error */
+		return false;
+	}
+	if (fcntl(client_socket, F_SETFL, O_NONBLOCK) == -1)
+	{
+		std::cout << "fail.\n";
+		/* Error */
+		return false;
+	}
+	if (!this->addReadEvent(kq, change_event, client_socket))
+	{
+		/* kevent Error */
+		return false;
+	}
+	Client new_client;
+	
+	new_client.setFd(client_socket);
+	this->clients.push_back(new_client);
+	return true;
+}
 
 bool Server::addToWaiting(const int &kq, const int &server_socket)
 

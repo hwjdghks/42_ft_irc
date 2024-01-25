@@ -18,6 +18,9 @@
 #define REGISTER_TIMEOUT_LIMIT 20
 #define CONNECT_TIMEOUT_LIMIT 120
 #define PINGPONG_TIMEOUT_LIMIT 5
+#define REGISTER_TIMEOUT_LIMIT 20
+#define CONNECT_TIMEOUT_LIMIT 120
+#define PINGPONG_TIMEOUT_LIMIT 5
 
 struct IRCMessage 
 {
@@ -52,15 +55,10 @@ private:
 	bool addTimerEvent(const int &kq, const int &fd, int second) const;
 	bool delTimerEvent(const int &kq, const int &fd) const;
 	bool addToWaiting(const int &kq, const int &server_socket);
+	bool addClient(const int &kq, const int &server_socket, struct kevent &change_event);
 	bool delClient(int fd);
-	const std::vector<Client>::const_iterator searchClient(int fd) const;
-	std::vector<Client>::iterator searchWaitingClient(int fd);
-	std::string str_toupper(std::string s);
 	IRCMessage parseMessage(const char message[]);
 
-	bool isValidChar(const char c);
-	bool isValidNick(const int &fd, const std::string &str);
-	void handleMessage(const int &fd, const IRCMessage &message);
 	void moveToClients(int kq, int fd);
     std::vector<Client>::iterator getCurrentClient(int fd, int *loc);
 	template <typename Iter>
@@ -72,5 +70,14 @@ private:
 		return first;
 	}
 	void stop(int kq, int server_socket);
+
+private:
+	std::string str_toupper(std::string s);
+	bool isValidChar(const char c);
+	bool isValidNick(const std::string &str);
+	bool isDupNick(const std::string &nick, const int &fd);
+	void handleMessage(const IRCMessage &message, const int &fd);
+
+
 };
 #endif
