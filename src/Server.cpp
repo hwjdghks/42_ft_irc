@@ -58,7 +58,137 @@ bool Server::pasreAndSetArguements(const char * const * argv)
 	return true;
 }
 
+std::string Server::str_toupper(std::string s)
+{
+    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+    return s;
+}
+
+IRCMessage Server::parseMessage(const char message[])
+{
+	IRCMessage ircMessage;
+	
+	std::istringstream iss(message);
+	std::string token;
+
+	// Extracting prefix
+	if (message[0] == ':') 
+		{
+		iss >> token;
+		ircMessage.prefix = token.substr(1);
+		}
+
+	// Extracting command
+	iss >> token;
+	ircMessage.command = str_toupper(token);
+
+	// Extracting parameters
+	while (iss >> token) 
+	{
+		ircMessage.parameters.push_back(token);
+	}
+
+	return ircMessage;
+}
+
+bool Server::isValidChar(const char c) 
+{
+    return (std::isalnum(c) || c == '-' || c == '_') && std::isprint(c) && !std::isspace(c);
+}
+
+bool Server::isValidNick(const std::string& str) 
+{
+    return std::all_of(str.begin(), str.end(), isValidChar);
+}
+
+//client와 waiting_client들 중 자신을 제외한 instance와 nick 중복 여부 확인
+bool Server::isDupNick(const std::string &nick, const int &fd)
+{
+	std::vector<Client>::iterator it;
+
+	//check resigstered clients
+	for(it = this->clients.begin(); it != this->clients.end(); it++)
+		if (it->getFd() != fd && it->getnickname() == nick)
+			return true;
+	//check waiting clients	
+	for(it = this->waiting_clients.begin(); it != this->waiting_clients.end(); it++)
+		if (it->getFd() != fd && it->getnickname() == nick)
+			return true;
+
+	return false
+}
+
+void Server::handleMessage(const IRCMessage &message, const int &fd)
+{
+
+				// std::vector<Client>::const_iterator const_it = searchClient(fd); //
+				// Client* current_client = const_cast<Client*>(&(*const_it));
+
+	//wait_client_list에서 해당 client instance search
+	std::vector<Client>::iterator current_client = searchWaitingClient(fd);
+
+	if (current_client != waiting_clients.end()) //CASE1 <-  등록 전 user
+	{	
+		if (message.command == "USER")
+		{
+			if (message.parameters.size() >= 4)
+			{
+				if ( current_client->getusername() != "")
+				{
+					//RPL reregister;
+				}
+				else
+				{
+					current_client->setusername(message.parameters[0]);
+				}
+			}
+			else
+			{
+				//RPL 461 :Not enought parameters;
+			}
+		}
+		else if (message.command == "PASS")
+		{
+			if (message.parameters.size() == 0)
+			{
+				//RPL 461 :Not enought parameters;
+			}
+			else
+			{
+				current_client->setpassword(message.parameters[0]);
+			}
+		}
+		if (message.command == "NICK")
+		{
+			if (message.parameters.size() == 0)
+			{
+				//RPL 461 :Not enought parameters;
+			}
+			else if (isDupNick(fd, message.parameters[0])) // nick 중복 여부 확인
+			{
+				//RPL 433 :Nickname is already in use;
+			}
+			else if (message.parameters[0].size() >= 9 && message.parameters[0].size() <= 30 && isValidNick(message.parameters[0]))
+			{
+				//RPL 432 :Erroneous Nickname;
+			}
+			else
+			{
+				current_client->setnickname(message.parameters[0]);
+			}
+		}
+		else if (message.command가 가용 command list상에 있으면)
+		{
+			//RPL :Not registered user yet
+		}
+	}
+}
+
+
+bool Server::addClient(const int &kq, const int &server_socket, struct kevent &change_event)
+
 bool Server::addToWaiting(const int &kq, const int &server_socket)
+
 {
 	std::cout << "try accept... ";
 
@@ -151,6 +281,16 @@ std::vector<Client>::iterator Server::getCurrentClient(int fd, int *loc)
 	if (loc)
 		*loc = pos;
 	return it;
+}
+
+std::vector<Client>::iterator Server::searchWaitingClient(int fd)
+{
+	std::vector<Client>::iterator it;
+
+	for(it = this->waiting_clients.begin(); it != this->waiting_clients.end(); it++)
+		if (it->getFd() == fd)
+			break ;
+	return it;	
 }
 
 bool Server::delClient(int fd)
@@ -308,6 +448,7 @@ void Server::run(void)
 			std::cout << "Success!!\n";
 
 			struct kevent *current_event;
+			struct IRCMessage message;
 			for (int idx = 0; idx < new_events_count; idx++)
 			{
 				current_event = &event_list[idx];
@@ -349,7 +490,12 @@ void Server::run(void)
 						{
 							buf[size] = '\0';
 							// 명령어 파싱
+							message = parseMessage(buf);
+
 							// 명령어 분기
+
+							handleMessage(message, current_event->ident);
+
 							int loc;
 							Client &current_client = *this->getCurrentClient(current_event->ident, &loc);
 							switch (loc)
@@ -402,6 +548,7 @@ void Server::run(void)
 							break;
 						}
 					}
+				//clear message(?) -- consider message struct value reset especially vector clear  
 				} /* event loop end */
 				break ;
 			} /* switch case end */
