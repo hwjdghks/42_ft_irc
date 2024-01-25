@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <arpa/inet.h>
+#include <ctime>
 
 enum {
 	PASS, NICK, USER
@@ -19,6 +20,18 @@ public:
 	Client &operator=(const Client &ref);
 	void setFd(const int &fd);
 	const int &getFd(void) const;
+	void setTime(void);
+	time_t getTime(void) const;
+
+	void setPassword(const std::string &password);
+	void setUsername(const std::string &username);	
+	void setNickname(const std::string &nickname);
+	void setRealname(const std::string &realname);		
+	const std::string &getPassword(void) const;
+	const std::string &getUsername(void) const;	
+	const std::string &getNickname(void) const;
+	const std::string &getRealname(void) const;	
+	
 
 private:
 	int						fd;
