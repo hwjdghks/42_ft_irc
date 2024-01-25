@@ -39,11 +39,12 @@ public:
 	void run(void);
 
 private:
+	int						server_fd;
+	int						kq;
 	in_port_t				port;
 	std::string				password;
 	std::vector<Channel>	channels;
 	std::vector<Client>		clients;
-	std::vector<Client>		waiting_clients;
 	int						max_clients;
 
 	bool init(int &serverSocket) const;
