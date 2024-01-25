@@ -6,6 +6,10 @@
 #include <arpa/inet.h>
 #include <ctime>
 
+enum {
+	PASS, NICK, USER
+};
+
 class Client
 {
 public:
@@ -30,11 +34,14 @@ public:
 	
 
 private:
-	std::string	password;
-	std::string	nickname;
-	std::string	username;
-	std::string	realname;
-	int			fd;
-	time_t		last_connect_time;
+	int						fd;
+	bool					regi[3];
+	auto					read_buffer;
+	auto					write_buffer;
+	std::vector<Channel *>	chans;
+	std::string				password;
+	std::string				nickname;
+	std::string				username;
+	std::string				realname;
 };
 #endif
