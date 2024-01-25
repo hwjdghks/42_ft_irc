@@ -27,3 +27,13 @@ const int &Client::getFd(void) const
 {
 	return this->fd;
 }
+
+void Client::setTime(void)
+{
+	this->last_connect_time = std::time(NULL);
+}
+
+time_t Client::getTime(void) const
+{
+	return this->last_connect_time;
+}

@@ -14,6 +14,9 @@
 
 #define BACKLOG 5 /* 어느 크기가 적당할지 */
 #define MAX_CLIENT 10
+#define REGISTER_TIMEOUT_LIMIT 20
+#define CONNECT_TIMEOUT_LIMIT 120
+#define PINGPONG_TIMEOUT_LIMIT 5
 
 class Server
 {
@@ -36,9 +39,21 @@ private:
 	int						max_clients;
 
 	bool init(int &serverSocket) const;
-	bool addEvent(const int &kq, struct kevent &change_event, const int &fd) const;
-	bool addClient(const int &kq, const int &server_socket, struct kevent &change_event);
+	bool addReadEvent(const int &kq, const int &fd) const;
+	bool addTimerEvent(const int &kq, const int &fd, int second) const;
+	bool delTimerEvent(const int &kq, const int &fd) const;
+	bool addToWaiting(const int &kq, const int &server_socket);
 	bool delClient(int fd);
-	const std::vector<Client>::const_iterator searchClient(int fd) const;
+	void moveToClients(int kq, int fd);
+    std::vector<Client>::iterator getCurrentClient(int fd, int *loc);
+	template <typename Iter>
+	Iter searchClient(Iter first, Iter last, int fd) const
+	{
+		for(; first != last; ++first)
+		 	if (first->getFd() == fd)
+				break ;
+		return first;
+	}
+	void stop(int kq, int server_socket);
 };
 #endif
