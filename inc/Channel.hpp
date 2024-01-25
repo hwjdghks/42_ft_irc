@@ -25,8 +25,8 @@ private:
 	std::string					name;
 	std::string					password;
 	std::string					topic;
-	std::vector<Client *>			operators;
-	std::vector<Client *>			users;
+	std::vector<Client *>		operators;
+	std::vector<Client *>		users;
 	std::vector<std::string>	invited;
 };
 #endif
