@@ -3,7 +3,12 @@
 
 #include <string>
 #include <vector>
-#include <arpa/inet.h>
+
+#include "Channel.hpp"
+
+enum {
+	PASS, NICK, USER
+};
 
 class Client
 {
@@ -15,6 +20,8 @@ public:
 	Client &operator=(const Client &ref);
 	void setFd(const int &fd);
 	const int &getFd(void) const;
+	void setTime(void);
+	time_t getTime(void) const;
 
 	void setPassword(const std::string &password);
 	void setUsername(const std::string &username);	
@@ -27,11 +34,14 @@ public:
 	
 
 private:
-	std::string	password;
-	std::string	nickname;
-	std::string	username;
-	std::string	realname;
-	int			fd;
-	int			last_connect_time;
+	int						fd;
+	bool					regi[3];
+	auto					read_buffer;
+	auto					write_buffer;
+	std::vector<Channel *>	chans;
+	std::string				password;
+	std::string				nickname;
+	std::string				username;
+	std::string				realname;
 };
 #endif
