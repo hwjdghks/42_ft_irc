@@ -59,6 +59,37 @@ bool Server::pasreAndSetArguements(const char * const * argv)
 }
 
 bool Server::addClient(const int &kq, const int &server_socket, struct kevent &change_event)
+{
+	std::cout << "try accept... ";
+
+	sockaddr_in client_addr;
+	socklen_t client_addr_len = sizeof(client_addr);
+	const int client_socket = accept(server_socket, reinterpret_cast<sockaddr *>(&client_addr), &client_addr_len);
+
+	std::cout << "fd set: " << client_socket << ' ';
+	if (client_socket == -1)
+	{
+		std::cout << "fail.\n";
+		/* Error */
+		return false;
+	}
+	if (fcntl(client_socket, F_SETFL, O_NONBLOCK) == -1)
+	{
+		std::cout << "fail.\n";
+		/* Error */
+		return false;
+	}
+	if (!this->addReadEvent(kq, change_event, client_socket))
+	{
+		/* kevent Error */
+		return false;
+	}
+	Client new_client;
+	
+	new_client.setFd(client_socket);
+	this->clients.push_back(new_client);
+	return true;
+}
 
 bool Server::addToWaiting(const int &kq, const int &server_socket)
 
