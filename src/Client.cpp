@@ -67,6 +67,7 @@ const std::string &Client::getRealname(void) const
 const std::string &Client::getUsername(void) const
 {
 	return this->username;
+}
 
 void Client::setTime(void)
 {
