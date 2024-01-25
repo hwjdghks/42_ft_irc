@@ -5,6 +5,10 @@
 #include <vector>
 #include <arpa/inet.h>
 
+enum {
+	PASS, NICK, USER
+};
+
 class Client
 {
 public:
@@ -17,11 +21,14 @@ public:
 	const int &getFd(void) const;
 
 private:
-	std::string	password;
-	std::string	nickname;
-	std::string	username;
-	std::string	realname;
-	int			fd;
-	int			last_connect_time;
+	int						fd;
+	bool					regi[3];
+	auto					read_buffer;
+	auto					write_buffer;
+	std::vector<Channel *>	chans;
+	std::string				password;
+	std::string				nickname;
+	std::string				username;
+	std::string				realname;
 };
 #endif
