@@ -16,14 +16,14 @@ public:
 	void setFd(const int &fd);
 	const int &getFd(void) const;
 
-	void setpassword(const std::string &password);
-	void setusername(const std::string &username);	
-	void setnickname(const std::string &nickname);
-	void setrealname(const std::string &realname);		
-	const std::string &getpassword(void) const;
-	const std::string &getusername(void) const;	
-	const std::string &getnickname(void) const;
-	const std::string &getrealname(void) const;	
+	void setPassword(const std::string &password);
+	void setUsername(const std::string &username);	
+	void setNickname(const std::string &nickname);
+	void setRealname(const std::string &realname);		
+	const std::string &getPassword(void) const;
+	const std::string &getUsername(void) const;	
+	const std::string &getNickname(void) const;
+	const std::string &getRealname(void) const;	
 	
 
 private:

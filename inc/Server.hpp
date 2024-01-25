@@ -48,12 +48,12 @@ private:
 	bool addClient(const int &kq, const int &server_socket, struct kevent &change_event);
 	bool delClient(int fd);
 	const std::vector<Client>::const_iterator searchClient(int fd) const;
-	std::vector<Client>::iterator search_waiting_Client(int fd);
+	std::vector<Client>::iterator searchWaitingClient(int fd);
 	std::string str_toupper(std::string s);
 	IRCMessage parseMessage(const char message[]);
 
 	bool isValidChar(const char c);
-	bool isValidNick(const std::string& str);
-	void handleMessage(const IRCMessage& message, const int& fd);
+	bool isValidNick(const int &fd, const std::string &str);
+	void handleMessage(const int &fd, const IRCMessage &message);
 };
 #endif

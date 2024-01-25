@@ -28,43 +28,43 @@ const int &Client::getFd(void) const
 	return this->fd;
 }
 
-void Client::setpassword(const std::string &password)
+void Client::setPassword(const std::string &password)
 {
 	this->password = password;
 }
 
-void Client::setusername(const std::string &username)
+void Client::setUsername(const std::string &username)
 {
 	this->username = username;
 }
 
-void Client::setnickname(const std::string &nickname)
+void Client::setNickname(const std::string &nickname)
 {
 	this->nickname = nickname;
 }
 
-void Client::setrealname(const std::string &realname)
+void Client::setRealname(const std::string &realname)
 {
 	this->realname = realname;
 }
 
 
-const std::string &Client::getpassword(void) const
+const std::string &Client::getPassword(void) const
 {
 	return this->password;
 }
 
-const std::string &Client::getnickname(void) const
+const std::string &Client::getNickname(void) const
 {
 	return this->nickname;
 }
 
-const std::string &Client::getrealname(void) const
+const std::string &Client::getRealname(void) const
 {
 	return this->realname;
 }
 
-const std::string &Client::getusername(void) const
+const std::string &Client::getUsername(void) const
 {
 	return this->username;
 }

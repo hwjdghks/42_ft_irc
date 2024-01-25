@@ -74,20 +74,36 @@ bool Server::isValidChar(const char c)
     return (std::isalnum(c) || c == '-' || c == '_') && std::isprint(c) && !std::isspace(c);
 }
 
-// Function to check if a string is valid
 bool Server::isValidNick(const std::string& str) 
 {
     return std::all_of(str.begin(), str.end(), isValidChar);
 }
 
-void Server::handleMessage(const IRCMessage& message, const int& fd)
+//client와 waiting_client들 중 자신을 제외한 instance와 nick 중복 여부 확인
+bool Server::isDupNick(const std::string &nick, const int &fd)
+{
+	std::vector<Client>::iterator it;
+
+	//check resigstered clients
+	for(it = this->clients.begin(); it != this->clients.end(); it++)
+		if (it->getFd() != fd && it->getnickname() == nick)
+			return true;
+	//check waiting clients	
+	for(it = this->waiting_clients.begin(); it != this->waiting_clients.end(); it++)
+		if (it->getFd() != fd && it->getnickname() == nick)
+			return true;
+
+	return false
+}
+
+void Server::handleMessage(const IRCMessage &message, const int &fd)
 {
 
 				// std::vector<Client>::const_iterator const_it = searchClient(fd); //
 				// Client* current_client = const_cast<Client*>(&(*const_it));
 
 	//wait_client_list에서 해당 client instance search
-	std::vector<Client>::iterator current_client = search_waiting_Client(fd);
+	std::vector<Client>::iterator current_client = searchWaitingClient(fd);
 
 	if (current_client != waiting_clients.end()) //CASE1 <-  등록 전 user
 	{	
@@ -120,13 +136,13 @@ void Server::handleMessage(const IRCMessage& message, const int& fd)
 				current_client->setpassword(message.parameters[0]);
 			}
 		}
-		else if (message.command == "NICK")
+		if (message.command == "NICK")
 		{
 			if (message.parameters.size() == 0)
 			{
 				//RPL 461 :Not enought parameters;
 			}
-			else if (같은 nick이 이미 존재할 경우) //client_list와 waiting_client_list 양쪽 instance들 중 자신을 제외한 instance와 nick 중복 여부 확인
+			else if (isDupNick(fd, message.parameters[0])) // nick 중복 여부 확인
 			{
 				//RPL 433 :Nickname is already in use;
 			}
@@ -138,6 +154,10 @@ void Server::handleMessage(const IRCMessage& message, const int& fd)
 			{
 				current_client->setnickname(message.parameters[0]);
 			}
+		}
+		else if (message.command가 가용 command list상에 있으면)
+		{
+			//RPL :Not registered user yet
 		}
 	}
 }
@@ -199,7 +219,7 @@ const std::vector<Client>::const_iterator Server::searchClient(int fd) const
 	return it;
 }
 
-std::vector<Client>::iterator Server::search_waiting_Client(int fd)
+std::vector<Client>::iterator Server::searchWaitingClient(int fd)
 {
 	std::vector<Client>::iterator it;
 
