@@ -67,4 +67,13 @@ const std::string &Client::getRealname(void) const
 const std::string &Client::getUsername(void) const
 {
 	return this->username;
+
+void Client::setTime(void)
+{
+	this->last_connect_time = std::time(NULL);
+}
+
+time_t Client::getTime(void) const
+{
+	return this->last_connect_time;
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <arpa/inet.h>
+#include <ctime>
 
 class Client
 {
@@ -15,6 +16,8 @@ public:
 	Client &operator=(const Client &ref);
 	void setFd(const int &fd);
 	const int &getFd(void) const;
+	void setTime(void);
+	time_t getTime(void) const;
 
 	void setPassword(const std::string &password);
 	void setUsername(const std::string &username);	
@@ -32,6 +35,6 @@ private:
 	std::string	username;
 	std::string	realname;
 	int			fd;
-	int			last_connect_time;
+	time_t		last_connect_time;
 };
 #endif
