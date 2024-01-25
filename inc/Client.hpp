@@ -3,8 +3,8 @@
 
 #include <string>
 #include <vector>
-#include <arpa/inet.h>
-#include <ctime>
+
+#include "Channel.hpp"
 
 enum {
 	PASS, NICK, USER
