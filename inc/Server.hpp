@@ -75,9 +75,15 @@ private:
 	std::string str_toupper(std::string s);
 	bool isValidChar(const char c);
 	bool isValidNick(const std::string &str);
-	bool isDupNick(const std::string &nick, const int &fd);
+	bool isDupNick(Client* cur_client, const std::string &nick);
 	void handleMessage(const IRCMessage &message, const int &fd);
 
+	void handleUSERcmd(Client* client, const std::vector<std::string>& parameters);
+	void handlePASScmd(Client* client, const std::vector<std::string>& parameters);
+	void handleNICKcmd(Client* client, const std::vector<std::string>& parameters);
+
+	void sendMSG(Client* receiver, struct IRCMessage send_message);
+	void sendMSG(Channel* recive_channel, struct IRCMessage send_message);
 
 };
 #endif

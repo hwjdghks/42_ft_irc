@@ -352,7 +352,6 @@ void Server::run(void)
 			std::cout << "Success!!\n";
 
 			struct kevent *current_event;
-			struct IRCMessage message;
 			for (int idx = 0; idx < new_events_count; idx++)
 			{
 				current_event = &event_list[idx];
@@ -394,10 +393,9 @@ void Server::run(void)
 						{
 							buf[size] = '\0';
 							// 명령어 파싱
-							message = parseMessage(buf);
+							struct IRCMessage message = parseMessage(buf);
 
 							// 명령어 분기
-
 							handleMessage(message, current_event->ident);
 
 							int loc;
@@ -419,6 +417,7 @@ void Server::run(void)
 								/* Error */
 								break;
 							}
+							//clear message(?) -- consider message struct value reset especially vector clear  
 						}
 					}
 					else if (current_event->filter == EVFILT_TIMER)
@@ -452,7 +451,6 @@ void Server::run(void)
 							break;
 						}
 					}
-				//clear message(?) -- consider message struct value reset especially vector clear  
 				} /* event loop end */
 				break ;
 			} /* switch case end */
