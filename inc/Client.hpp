@@ -9,14 +9,15 @@ class Client
 {
 private:
 	int						fd;
+	bool					life;
 	bool					regi[3];
 	std::string				read_buffer;
 	std::string				write_buffer;
-	std::vector<Channel *>	channels;
 	std::string				password;
 	std::string				nickname;
 	std::string				username;
 	std::string				realname;
+	std::vector<Channel *>	channels;
 public:
 	Client();
 	Client(const Client &ref);
@@ -36,7 +37,12 @@ public:
 	const std::string &getNickname(void) const;
 	const std::string &getRealname(void) const;
 	
+	bool isAlive();
 	bool isRegistered(void);
+
+	int addWrite_buffer(std::string);
+	std::string getWrite_buffer(void);
+	int delWrite_buffer(std::string);
 };
 
 #endif
