@@ -20,7 +20,7 @@ public:
 
 	Irc &operator=(const Irc &ref);
 
-	void setPassword(std::string);
+	void setPassword(std::string password);
 
 	int createClient(int fd);
 	t_send_event executeCommand(int fd, std::string recv_buffer);
@@ -30,13 +30,13 @@ public:
 	t_send_event deleteClient(int fd);
 
 private:
-	int	_register_executor(Client *client, IRCMessage recv_msg);
+	int _register_executor(Client *client, IRCMessage recv_msg);
 	int __register_user(Client *client, IRCMessage message);
 	int __register_pass(Client *client, IRCMessage message);
 	int __register_nick(Client *client, IRCMessage message);
-	int	__isCommand(std::string cmd);
+	bool __isCommand(std::string cmd);
 private:
-	int	_command_executor(Client *client, IRCMessage recv_msg);
+	int _command_executor(Client *client, IRCMessage recv_msg);
 	int __cmd_user(Client *client, IRCMessage message);
 	int __cmd_pass(Client *client, IRCMessage message);
 	int __cmd_nick(Client *client, IRCMessage message);
@@ -53,7 +53,7 @@ private:
 	int __cmd_invite(Client *client, IRCMessage message);
 	int __cmd_mode(Client *client, IRCMessage message);
 	int __not_a_command(Client *client, IRCMessage message);
-private:
+private: // irc_rpl.cpp
 	std::string _001_rpl_welcome(std::string prefix, std::string clientnick, std::string user_prefix);
 	std::string _321_rpl_liststart(std::string prefix, std::string clientnick);
 	std::string _322_rpl_list(std::string prefix, std::string clientnick, std::string channelname, std::string usercnt, std::string topic);
@@ -64,7 +64,7 @@ private:
 	std::string _332_rpl_topic(std::string prefix, std::string clientnick, std::string channelname, std::string topic);
 	std::string _341_rpl_inviting(std::string prefix, std::string clientnick, std::string channelname, std::string nick);
 	std::string _324_rpl_channelmodeis(std::string prefix, std::string clientnick, std::string mode);
-private:
+private: // irc_err.cpp
 	std::string _421_err_unknowncommand(std::string prefix, std::string clientnick, std::string command);
 	std::string _432_err_erroneusnickname(std::string prefix, std::string clientnick, std::string nick);
 	std::string _433_err_nicknameinuse(std::string prefix, std::string clientnick, std::string nick);
