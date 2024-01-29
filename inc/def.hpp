@@ -20,6 +20,14 @@
 # define SERVERNAME	"ft_irc"
 # define SERVERURL	"ft_irt.42.fr"
 
+enum {
+	PASS, NICK, USER
+};
+
+enum {
+	TITLE, OP, KEY, LIMIT, INVITE
+};
+
 typedef struct s_send_event
 {
 	bool				recv_work; // 만약 꺼져있다면 아무것도 하지 마
