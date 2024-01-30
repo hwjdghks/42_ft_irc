@@ -23,7 +23,7 @@ public:
 	void setPassword(std::string password);
 	std::size_t getClientListSize(void);
 
-	int createClient(int fd);
+	int createClient(int fd, std::string hostname);
 	t_send_event executeCommand(int fd, std::string recv_buffer);
 	Client *searchClient(int fd);
 	t_send_event ping(int fd);

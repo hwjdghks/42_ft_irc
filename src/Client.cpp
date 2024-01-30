@@ -59,6 +59,11 @@ void Client::setNickname(const std::string &nickname)
 	this->nickname = nickname;
 }
 
+void Client::setHostname(const std::string &hostname)
+{
+	this->hostname = hostname;
+}
+
 void Client::setRealname(const std::string &realname)
 {
 	this->realname = realname;
@@ -78,6 +83,11 @@ const std::string &Client::getNickname(void) const
 const std::string &Client::getRealname(void) const
 {
 	return this->realname;
+}
+
+const std::string &Client::getHostname(void) const
+{
+	return this->hostname;
 }
 
 const std::string &Client::getUsername(void) const

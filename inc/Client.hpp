@@ -16,6 +16,7 @@ private:
 	std::string				password;
 	std::string				nickname;
 	std::string				username;
+	std::string				hostname;
 	std::string				realname;
 	std::vector<Channel *>	channels;
 public:
@@ -31,10 +32,12 @@ public:
 	void setPassword(const std::string &password);
 	void setUsername(const std::string &username);
 	void setNickname(const std::string &nickname);
+	void setHostname(const std::string &hostname);
 	void setRealname(const std::string &realname);
 	const std::string &getPassword(void) const;
 	const std::string &getUsername(void) const;
 	const std::string &getNickname(void) const;
+	const std::string &getHostname(void) const;
 	const std::string &getRealname(void) const;
 	
 	bool isAlive(void);

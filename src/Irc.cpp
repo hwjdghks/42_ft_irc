@@ -28,19 +28,17 @@ void Irc::setPassword(std::string password)
 
 std::size_t Irc::getClientListSize(void)
 {
-	std::size_t tmp = static_cast<size_t>(clients.size());
+	std::size_t tmp = clients.size();
 	return (tmp);
 }
 
-int Irc::createClient(int fd)
+int Irc::createClient(int fd, std::string hostname)
 {
 	if (!(clients.size() < MAX_CLIENT))
 		return (FAIL);
-	// client vector에 client 추가하기
-	// 기존 서버에 존재하는 코드 그대로 가져옴
 	Client new_client;
-	
 	new_client.setFd(fd);
+	new_client.setHostname(hostname);
 	this->clients.push_back(new_client);
 	return (SUCCESS);
 }
