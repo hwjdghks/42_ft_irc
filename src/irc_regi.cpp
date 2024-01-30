@@ -47,7 +47,7 @@ int Irc::__register_user(Client *client, IRCMessage message)
 		if ( client->getUsername() != "")
 		{
 			_setSendEvent(true, false, false, true, fds);
-			_462_err_alreadyregisterd(SERVERURL, client->getNickname());
+			client->addWrite_buffer(_462_err_alreadyregisterd(SERVERURL, client->getNickname()));
 			return FAIL;
 		}
 		else
@@ -60,7 +60,7 @@ int Irc::__register_user(Client *client, IRCMessage message)
 	else
 	{
 		_setSendEvent(true, false, false, true, fds);		
-		_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command);
+		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 		return FAIL;
 	}
 }
@@ -71,7 +71,7 @@ int Irc::__register_pass(Client* client, IRCMessage message)
 	if (message.parameters.size() == 0)
 	{
 		_setSendEvent(true, false, false, true, fds);
-		_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command);
+		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 		return FAIL;
     }
 	else
@@ -88,19 +88,19 @@ int Irc::__register_nick(Client* client, IRCMessage message)
 	if (message.parameters.size() == 0)
 	{
 		_setSendEvent(true, false, false, true, fds);
-		_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command);
+		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 		return FAIL;
 	}
 	else if (isDupNick(client, message.parameters[0])) // nick 중복 여부 확인
 	{
 		_setSendEvent(true, false, false, true, fds);
-		_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]);
+		client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
 		return FAIL;
 	}
 	else if !(__isValidNick(message.parameters[0]))
 	{
 		_setSendEvent(true, false, false, true, fds);		
-        _432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]);
+        client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
 		return FAIL;
 	}
 	else
