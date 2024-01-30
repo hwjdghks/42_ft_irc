@@ -21,6 +21,7 @@ public:
 	Irc &operator=(const Irc &ref);
 
 	void setPassword(std::string password);
+	std::size_t getClientListSize(void);
 
 	int createClient(int fd);
 	t_send_event executeCommand(int fd, std::string recv_buffer);
@@ -29,6 +30,8 @@ public:
 	t_send_event quit(int fd, char *reason); // timeout, socket 문제
 	t_send_event deleteClient(int fd);
 
+private:
+	int	_setSendEvent(bool, bool, bool, bool, std::vector<int>);
 private:
 	int _register_executor(Client *client, IRCMessage recv_msg);
 	int __register_user(Client *client, IRCMessage message);

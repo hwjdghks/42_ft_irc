@@ -26,6 +26,12 @@ void Irc::setPassword(std::string password)
 	this->password = password;
 }
 
+std::size_t Irc::getClientListSize(void)
+{
+	std::size_t tmp = static_cast<size_t>(clients.size());
+	return (tmp);
+}
+
 int Irc::createClient(int fd)
 {
 	if (!(clients.size() < MAX_CLIENT))
@@ -70,7 +76,7 @@ t_send_event Irc::ping(int fd)
 	return (send_msg);
 }
 
-t_send_event Irc::quit(int fd)
+t_send_event Irc::quit(int fd, char *msg)
 {
 	// 해당 fd의 클라이언트를 찾는다
 	// 해당 클라이언트가 속한 채널의 유저들을 찾는다
@@ -85,6 +91,16 @@ t_send_event Irc::deleteClient(int fd)
 	// 해당 클라이언트가 가입된 채널을 찾아 제거한다
 	// 클라이언트 벡터에서 해당 클라이언트를 제거한다.
 	return (send_msg);
+}
+
+int	Irc::_setSendEvent(bool recv_work, bool recv_time, bool recv_close, bool to_send, std::vector<int> fds)
+{
+	send_msg.recv_work = recv_work;
+	send_msg.recv_time = recv_time;
+	send_msg.recv_close = recv_close;
+	send_msg.to_send = to_send;
+	send_msg.fds = fds;
+	return (SUCCESS);
 }
 
 int Irc::_register_executor(Client *client, IRCMessage recv_msg)
