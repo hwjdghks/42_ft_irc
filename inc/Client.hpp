@@ -37,8 +37,9 @@ public:
 	const std::string &getNickname(void) const;
 	const std::string &getRealname(void) const;
 	
-	bool isAlive();
+	bool isAlive(void);
 	bool isRegistered(void);
+	
 
 	int addWrite_buffer(std::string);
 	std::string getWrite_buffer(void);

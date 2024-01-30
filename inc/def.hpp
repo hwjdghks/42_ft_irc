@@ -13,8 +13,13 @@
 # define CONNECT_TIMEOUT_LIMIT 120
 # define PINGPONG_TIMEOUT_LIMIT 5
 
+# define MAX_CHANNEL 10
+
 # define SUCCESS 1
 # define FAIL 0
+
+# define TIMEOUT "time out"
+# define SOCKETERR "socket err"
 
 # define HOST "localhost"
 # define SERVERNAME	"ft_irc"
