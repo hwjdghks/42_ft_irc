@@ -7,9 +7,30 @@ std::string _str_toupper(std::string s)
     return s;
 }
 
+bool __isValidChannelName(const std::string &chName)
+{
+	std::string tmpStr;
+	if (chName.empty())
+		return false;
+	if (chName.length() > 32)
+		return false;
+	if (chName[0] != '&' && chName[0] != '#')
+		return false;
+	tmpStr = chName.substr(1);
+	if (!std::all_of(tmpStr.begin(), tmpStr.end(), ___isValidChar))
+	 	return false;
+
+	return true;
+}
+
 bool __isValidNick(const std::string &nick)
 {
-	return std::all_of(nick.begin(), nick.end(), ___isValidChar);
+	if (nick.length() > 9)
+		return false;
+	if (std::all_of(nick.begin(), nick.end(), ___isValidChar))
+		return false;
+		
+	return true;
 }
 
 bool ___isValidChar(const char c) 
@@ -101,7 +122,7 @@ int Irc::__register_nick(Client* client, IRCMessage message)
 		_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]);
 		return FAIL;
 	}
-	else if (message.parameters[0].size() >= 9 && message.parameters[0].size() <= 30 && __isValidNick(message.parameters[0]))
+	else if !(__isValidNick(message.parameters[0]))
 	{
 		this->send_msg.recv_work = true;
 		this->send_msg.recv_time = false;
