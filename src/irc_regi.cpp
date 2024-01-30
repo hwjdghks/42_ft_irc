@@ -41,36 +41,25 @@ bool ___isValidChar(const char c)
 
 int Irc::__register_user(Client *client, IRCMessage message)
 {
+	std::vector<int> fds(client->getFd());
 	if (message.parameters.size() >= 4)
 	{
 		if ( client->getUsername() != "")
 		{
-			this->send_msg.recv_work = true;
-			this->send_msg.recv_time = false;
-			this->send_msg.recv_close = false;
-			this->send_msg.to_send = true;
-			this->send_msg.fds.push_back(client->getFd());			
+			_setSendEvent(true, false, false, true, fds);
 			_462_err_alreadyregisterd(SERVERURL, client->getNickname());
 			return FAIL;
 		}
 		else
 		{
-			this->send_msg.recv_work = false;
-			this->send_msg.recv_time = true;
-			this->send_msg.recv_close = false;
-			this->send_msg.to_send = false;		
-			this->send_msg.fds.push_back(client->getFd());		
+			_setSendEvent(false, false, false, false, fds);
 			client->setUsername(message.parameters[0]);
 			return SUCCESS;
 		}
 	}
 	else
 	{
-		this->send_msg.recv_work = true;
-		this->send_msg.recv_time = false;
-		this->send_msg.recv_close = false;
-		this->send_msg.to_send = true;		
-		this->send_msg.fds.push_back(client->getFd());		
+		_setSendEvent(true, false, false, true, fds);		
 		_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command);
 		return FAIL;
 	}
@@ -78,23 +67,16 @@ int Irc::__register_user(Client *client, IRCMessage message)
 
 int Irc::__register_pass(Client* client, IRCMessage message)
 {
+	std::vector<int> fds(client->getFd());
 	if (message.parameters.size() == 0)
 	{
-		this->send_msg.recv_work = true;
-		this->send_msg.recv_time = false;
-		this->send_msg.recv_close = false;
-		this->send_msg.to_send = true;		
-		this->send_msg.fds.push_back(client->getFd());		
+		_setSendEvent(true, false, false, true, fds);
 		_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command);
 		return FAIL;
     }
 	else
 	{
-		this->send_msg.recv_work = false;
-		this->send_msg.recv_time = true;
-		this->send_msg.recv_close = false;
-		this->send_msg.to_send = false;		
-		this->send_msg.fds.push_back(client->getFd());		
+		_setSendEvent(false, false, false, false, fds);
 		client->setPassword(message.parameters[0]);
 		return SUCCESS;
 	}
@@ -102,43 +84,28 @@ int Irc::__register_pass(Client* client, IRCMessage message)
 
 int Irc::__register_nick(Client* client, IRCMessage message)
 {
+	std::vector<int> fds(client->getFd());	
 	if (message.parameters.size() == 0)
 	{
-		this->send_msg.recv_work = true;
-		this->send_msg.recv_time = false;
-		this->send_msg.recv_close = false;
-		this->send_msg.to_send = true;		
-		this->send_msg.fds.push_back(client->getFd());		
+		_setSendEvent(true, false, false, true, fds);
 		_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command);
 		return FAIL;
 	}
 	else if (isDupNick(client, message.parameters[0])) // nick 중복 여부 확인
 	{
-		this->send_msg.recv_work = true;
-		this->send_msg.recv_time = false;
-		this->send_msg.recv_close = false;
-		this->send_msg.to_send = true;		
-		this->send_msg.fds.push_back(client->getFd());		
+		_setSendEvent(true, false, false, true, fds);
 		_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]);
 		return FAIL;
 	}
 	else if !(__isValidNick(message.parameters[0]))
 	{
-		this->send_msg.recv_work = true;
-		this->send_msg.recv_time = false;
-		this->send_msg.recv_close = false;
-		this->send_msg.to_send = true;
-		this->send_msg.fds.push_back(client->getFd());		
+		_setSendEvent(true, false, false, true, fds);		
         _432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]);
 		return FAIL;
 	}
 	else
 	{
-		this->send_msg.recv_work = false;
-		this->send_msg.recv_time = true;
-		this->send_msg.recv_close = false;
-		this->send_msg.to_send = false;
-		this->send_msg.fds.push_back(client->getFd());		
+		_setSendEvent(false, false, false, false, fds);		
 		client->setNickname(message.parameters[0]);
 		return SUCCESS;
 	}
