@@ -27,9 +27,9 @@ bool __isValidNick(const std::string &nick)
 {
 	if (nick.length() > 9)
 		return false;
-	if (std::all_of(nick.begin(), nick.end(), ___isValidChar))
+	if !(std::all_of(nick.begin(), nick.end(), ___isValidChar))
 		return false;
-		
+
 	return true;
 }
 
