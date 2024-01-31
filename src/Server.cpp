@@ -1,5 +1,9 @@
 #include "Server.hpp"
-#include <iostream> /* test header */
+
+/* debug header */
+#include <iostream>
+#define DEBUGMSG "[DEBUG] " <<
+/* debug header end */
 
 Server::Server(void) {}
 
@@ -18,442 +22,142 @@ Server &Server::operator=(const Server &ref)
 	return *this;
 }
 
-void Server::stop(int kq, int server_socket)
+bool Server::init(void)
 {
-	for (std::vector<Channel>::iterator it = this->channels.begin(); it != this->channels.end(); it++)
-	{
-		/* channel operators and clients delete */
-	}
-	this->channels.clear();
-	for (std::vector<Client>::iterator it = this->waiting_clients.begin(); it != this->waiting_clients.end(); it++)
-	{
-		close(it->getFd());
-	}
-	this->waiting_clients.clear();
-	for (std::vector<Client>::iterator it = this->clients.begin(); it != this->clients.end(); it++)
-	{
-		close(it->getFd());
-	}
-	this->clients.clear();
-	close(kq);
-	close(server_socket);
-	/* need close error handling? */
-}
-
-bool Server::pasreAndSetArguements(const char * const * argv)
-{
-	long confirm;
-
-	for(const char *iter = argv[1]; iter && *iter; iter++)
-		if (!std::isdigit(*iter))
-			return false;
-	confirm = std::strtol(argv[1], NULL, 10);
-	if (confirm < 0 || confirm > 65535)
+	signal(SIGPIPE, SIG_IGN);
+	control.setPassword(this->password);
+	this->server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (server_fd == -1)
 		return false;
-	this->port = static_cast<in_port_t>(confirm);
-	for(const char *iter = argv[2]; iter && *iter; iter++)
-		if (!std::isprint(*iter))
-			return false;
-	this->password = std::string(argv[2]);
-	return true;
-}
-
-bool Server::addClient(const int &kq, const int &server_socket, struct kevent &change_event)
-{
-	std::cout << "try accept... ";
-
-	sockaddr_in client_addr;
-	socklen_t client_addr_len = sizeof(client_addr);
-	const int client_socket = accept(server_socket, reinterpret_cast<sockaddr *>(&client_addr), &client_addr_len);
-
-	std::cout << "fd set: " << client_socket << ' ';
-	if (client_socket == -1)
-	{
-		std::cout << "fail.\n";
-		/* Error */
-		return false;
-	}
-	if (fcntl(client_socket, F_SETFL, O_NONBLOCK) == -1)
-	{
-		std::cout << "fail.\n";
-		/* Error */
-		return false;
-	}
-	if (!this->addReadEvent(kq, change_event, client_socket))
-	{
-		/* kevent Error */
-		return false;
-	}
-	Client new_client;
-	
-	new_client.setFd(client_socket);
-	this->clients.push_back(new_client);
-	return true;
-}
-
-bool Server::addToWaiting(const int &kq, const int &server_socket)
-
-{
-	std::cout << "try accept... ";
-
-	const int client_socket = accept(server_socket, NULL, NULL);
-
-	std::cout << "fd set: " << client_socket << ' ';
-	if (client_socket == -1)
-	{
-		std::cout << "fail.\n";
-		/* Error */
-		return false;
-	}
-	if (fcntl(client_socket, F_SETFL, O_NONBLOCK) == -1)
-	{
-		std::cout << "fail.\n";
-		/* Error */
-		return false;
-	}
-	if (!this->addReadEvent(kq, client_socket))
-	{
-		/* kevent Error */
-		return false;
-	}
-	if (!this->addTimerEvent(kq, client_socket, REGISTER_TIMEOUT_LIMIT))
-	{
-		/* kevent Error */
-		return false;
-	}
-	Client new_client;
-	
-	new_client.setFd(client_socket);
-	this->waiting_clients.push_back(new_client);
-	std::cout << "Success!!\n";
-	return true;
-}
-
-bool Server::addReadEvent(const int &kq, const int &fd) const
-{
-	struct kevent change_event;
-
-	EV_SET(&change_event, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	if (kevent(kq, &change_event, 1, NULL, 0, NULL) == -1)
-	{
-		/* kevent error */
-		return false;
-	}
-	return true;
-}
-
-bool Server::addTimerEvent(const int &kq, const int &fd, int second) const
-{
-	struct kevent change_event;
-
-	EV_SET(&change_event, fd, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, second * 1000, NULL);
-	if (kevent(kq, &change_event, 1, NULL, 0, NULL) == -1)
-	{
-		/* kevent error */
-		return false;
-	}
-	return true;
-}
-
-bool Server::delTimerEvent(const int &kq, const int &fd) const
-{
-	struct kevent change_event;
-
-	EV_SET(&change_event, fd, EVFILT_TIMER, EV_DELETE, 0, 0, NULL);
-	if (kevent(kq, &change_event, 1, NULL, 0, NULL) == -1)
-	{
-		/* kevent error */
-		return false;
-	}
-	return true;
-}
-
-std::vector<Client>::iterator Server::getCurrentClient(int fd, int *loc)
-{
-	std::vector<Client>::iterator it;
-	int pos = -1;
-
-	it = this->searchClient(this->waiting_clients.begin(), this->waiting_clients.end(), fd);
-	if (it != waiting_clients.end())
-		pos = 1;
-	else
-	{
-		it = this->searchClient(this->clients.begin(), this->clients.end(), fd);
-		if (it != clients.end())
-			pos = 2;
-	}
-	if (loc)
-		*loc = pos;
-	return it;
-}
-
-std::vector<Client>::iterator Server::searchWaitingClient(int fd)
-{
-	std::vector<Client>::iterator it;
-
-	for(it = this->waiting_clients.begin(); it != this->waiting_clients.end(); it++)
-		if (it->getFd() == fd)
-			break ;
-	return it;	
-}
-
-bool Server::delClient(int fd)
-{
-	int loc;
-	std::vector<Client>::iterator it = this->getCurrentClient(fd, &loc);
-	std::cout << "find!\n";
-
-	switch (loc)
-	{
-	case 1:
-		/* code */
-		this->waiting_clients.erase(it);
-		break;
-	case 2:
-		/* code */
-		this->clients.erase(it);
-		break;
-	default:
-		/* Error */
-		return false;
-	}
-	return true;
-}
-
-void Server::moveToClients(int kq, int fd)
-{
-	this->delTimerEvent(kq, fd);
-	std::vector<Client>::iterator it = this->searchClient(this->waiting_clients.begin(), this->waiting_clients.end(), fd);
-	this->clients.push_back(*it);
-	this->waiting_clients.erase(it);
-	this->addTimerEvent(kq, fd, CONNECT_TIMEOUT_LIMIT);
-}
-
-bool Server::init(int &server_socket) const
-{
-	std::cout << "Create Server socket... ";
-	server_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_socket == -1)
-	{
-		/* socket error */
-		std::cout << "fail.\n";
-		return false;
-	}
-	std::cout << "Success!!\n";
 	int flag = 1;
-	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) == -1)
-	{
-		/* setsockopt rror */
-		std::cout << "fail.\n";
-		return false;
-	}
+	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) == -1)
+		return closeServerSocket();
 	struct sockaddr_in server_addr;
 
 	std::memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	server_addr.sin_port = htons(this->port);
-	std::cout << "try bind... ";
-	if (bind(server_socket, reinterpret_cast<sockaddr *>(&server_addr), sizeof(server_addr)) == -1)
+	if (bind(server_fd, reinterpret_cast<sockaddr *>(&server_addr), sizeof(server_addr)) == -1)
+		return closeServerSocket();
+	if (listen(server_fd, BACKLOG) == -1)
+		return closeServerSocket();
+	if (fcntl(server_fd, F_SETFL, O_NONBLOCK) == -1)
+		return closeServerSocket();
+	this->kq = kqueue();
+	if (kq == -1)
+		return closeServerSocket();
+	if (!addReadEvent(server_fd))
 	{
-		/* bind error */
-		std::cout << "fail.\n";
-		if (close(server_socket) == -1)
-		{
-			/* close error */
-			return false;
-		}
-		return false;
+		closeKqueue();
+		return closeServerSocket();
 	}
-	std::cout << "Success!!\n";
-	std::cout << "try listen... ";
-	if (listen(server_socket, BACKLOG) == -1)
-	{
-		/* listen error */
-		std::cout << "fail.\n";
-		if (close(server_socket) == -1)
-		{
-			/* close error */
-			return false;
-		}
-		return false;
-	}
-	std::cout << "Success!!\n";
-	std::cout << "set non_block ... ";
-	if (fcntl(server_socket, F_SETFL, O_NONBLOCK) == -1)
-	{
-		/* fcntl error */
-		std::cout << "fail.\n";
-		if (close(server_socket) == -1)
-		{
-			/* close error */
-			return false;
-		}
-		return false;
-	}
-	std::cout << "Success!!\n";
 	return true;
 }
 
 void Server::run(void)
 {
-	int get_server_socket;
-
-	if (!this->init(get_server_socket))
-		return ;
-	const int server_socket = get_server_socket;
-
-	std::cout << "create kqueue... ";
-	int kq = kqueue();
-
-	if (kq == -1)
+	if (!init())
 	{
-		/* kqueue error */
-		std::cout << "fail.\n";
-		if (close(server_socket) == -1)
-		{
-			/* close error */
-			return ;
-		}
+		std::cout << DEBUGMSG "Server initialize fail. Stop.\n";
 		return ;
 	}
-	std::cout << "Success!!\n";
-	/* server socket event apply */
-
-	if (!this->addReadEvent(kq, server_socket))
-	{
-		/* addEvent error */
-		std::cout << "fail.\n";
-		return ;
-	}
-	std::cout << "Success!!\n";
+	std::cout << DEBUGMSG "Initialize Success.\n";
 	std::vector<struct kevent> event_list;
 
 	event_list.reserve(MAX_CLIENT + 1);
 	while (true)
 	{
-		std::cout << "wait event... ";
+		std::cout << DEBUGMSG "wait event... ";
 
 		timespec ts;
 		ts.tv_sec = 2;
 		ts.tv_nsec = 0;
 		int new_events_count = kevent(kq, NULL, 0, &event_list[0], MAX_CLIENT + 1, &ts);
-		switch (new_events_count)
+		if (new_events_count == -1)
 		{
-		case -1: /* Error occur */
-			std::cout << "fail.\n";
-			/* code */
-			break ;
-		case 0: /* kevent timeout */
-			std::cout << "timeout.\n";
-			/* code */
-			break ;
-		default:
-			std::cout << "Success!!\n";
-
-			struct kevent *current_event;
+			std::cout << DEBUGMSG "fail.\n";
+			/* kevent error */
+			return this->stop();
+		}
+		else if (new_events_count == 0)
+		{
+			std::cout << DEBUGMSG "timeout.\n";
+			/* maybe no need code in this scope */
+			/* don't need to set timeout? */
+		}
+		else
+		{
+			std::cout << DEBUGMSG "Success!!\n";
+			std::cout << DEBUGMSG "event size: " << new_events_count << '\n';
 			for (int idx = 0; idx < new_events_count; idx++)
 			{
-				current_event = &event_list[idx];
+				struct kevent *current_event = &event_list[idx];
+				std::cout << DEBUGMSG "fd: " << current_event->ident << '\n';
 				if (current_event->flags & EV_ERROR)
 				{
-					std::cout << "ERROR FLAG SET.\n";
-					/* Error */
-					if (current_event->ident == server_socket)
-					{}
+					std::cout << DEBUGMSG "ERROR\n";
+					if (current_event->ident == static_cast<uintptr_t>(this->server_fd))
+					{
+						/* server socket error */
+						return this->stop();
+					}
 					else
-					{}
-					continue ; /* Error handling end */
-				}
-				if (current_event->ident == server_socket)
-				{
-					this->addToWaiting(kq, server_socket);
-				}
-				else
-				{
-					if (current_event->filter == EVFILT_READ)
 					{
-						if (current_event->flags & EV_EOF) /* socket close */
-						{
-							/* Equal to recv() return value is 0 */
-							/* need reply? */
-							close(current_event->ident);
-							this->delClient(current_event->ident);
-							continue ; /* Error handling end */
-						}
-						char buf[4096];
-						int size = recv(current_event->ident, &buf, sizeof(buf), 0);
-						if (size == -1)
-						{
-							/* recive error */
-							std::cout << "recv fail.\n";
-							break ;
-						}
-						else
-						{
-							buf[size] = '\0';
-							// 명령어 파싱
-							struct IRCMessage message = parseMessage(buf);
-
-							// 명령어 분기
-							handleMessage(message, current_event->ident);
-
-							int loc;
-							Client &current_client = *this->getCurrentClient(current_event->ident, &loc);
-							switch (loc)
-							{
-							case 1: /* waiting list */
-								std::cout << "move to regular list.\n";
-								this->moveToClients(kq, current_client.getFd());
-								/* code */
-								break;
-							case 2: /* join client list */
-								/* code */
-								std::cout << "regular event\n";
-								/* update last connect */
-								this->addTimerEvent(kq, current_event->ident, CONNECT_TIMEOUT_LIMIT);
-								break;
-							default:
-								/* Error */
-								break;
-							}
-							//clear message(?) -- consider message struct value reset especially vector clear  
-						}
+						/* client socket error */
+						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
+						if (!setReplyEventToClient(current_event->ident, result))
+							return this->stop();
 					}
-					else if (current_event->filter == EVFILT_TIMER)
+					continue ;
+				}
+				if (current_event->ident == static_cast<uintptr_t>(this->server_fd))
+				{
+					std::cout << DEBUGMSG "TRY ACCEPT\n";
+					if (!setNewClientSocket())
+						return this->stop();
+				}
+				else if (current_event->filter == EVFILT_READ)
+				{
+					std::cout << DEBUGMSG "READ\n";
+					this->printData(current_event);
+					if (current_event->flags & EV_EOF) /* peer connect close */
 					{
-						if (current_event->flags & EV_EOF) /* socket close */
-						{
-							/* Equal to recv() return value is 0 */
-							/* need reply? */
-							close(current_event->ident);
-							this->delClient(current_event->ident);
-							continue ; /* Error handling end */
-						}
-						int loc;
-						Client &current_client = *this->getCurrentClient(current_event->ident, &loc);
-						switch (loc)
-						{
-						case 1: /* waiting list */
-							std::cout << "register fail.\n";
-							close(current_client.getFd());
-							this->delClient(current_client.getFd());
-							/* code */
-							break;
-						case 2: /* join client list */
-							/* timeout test */
-							std::cout << "client timeout check test\n";
-							this->addTimerEvent(kq, current_client.getFd(), PINGPONG_TIMEOUT_LIMIT);
-							/* code */
-							break;
-						default:
-							/* Error */
-							break;
-						}
+						std::cout << DEBUGMSG "READ ERROR\n";
+						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
+						if (!setReplyEventToClient(current_event->ident, result))
+							return this->stop();
+						continue ;
 					}
-				} /* event loop end */
-				break ;
-			} /* switch case end */
-		} /* infinite loop end */
-	}
+					if (!recvMsg(current_event->ident))
+						return this->stop();
+				}
+				else if (current_event->filter == EVFILT_WRITE)
+				{
+					std::cout << DEBUGMSG "WRITE\n";
+					this->printData(current_event);
+					if (current_event->flags & EV_EOF) /* peer connect close */
+					{
+						std::cout << DEBUGMSG "WRITE ERROR\n";
+						/* write event error */
+						/* socket close */
+						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
+						if (!setReplyEventToClient(current_event->ident, result))
+							return this->stop(); /* kevent error */
+						continue ;
+					}
+					if (!sendMsg(current_event->ident, current_event->udata))
+						return this->stop();
+				}
+				else if (current_event->filter == EVFILT_TIMER)
+				{
+					std::cout << DEBUGMSG "TIMEOUT\n";
+					this->printData(current_event);
+					/* register, connect 등 이벤트 처리 */
+					if (!handleTimerEvent(current_event->ident, current_event->udata))
+						return this->stop();
+				}
+			} /* each event handling end */
+		} /* kevent case end */
+	} /* infinite loop end */
 }
