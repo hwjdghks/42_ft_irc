@@ -30,8 +30,12 @@ public:
 	t_send_event quit(int fd, char *reason); // timeout, socket 문제
 	t_send_event deleteClient(int fd);
 
+	std::vector<int> getAllClientFd(void);
+
 private:
+	int _addBot();
 	int	_setSendEvent(bool, bool, bool, bool, std::vector<int>);
+	int	_clearSendEvent();
 private:
 	int _register_executor(Client *client, IRCMessage recv_msg);
 	int __register_user(Client *client, IRCMessage message);

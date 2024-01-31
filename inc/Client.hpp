@@ -9,6 +9,7 @@ class Client
 {
 private:
 	int						fd;
+	bool					bot;
 	bool					life;
 	bool					regi[3];
 	std::string				read_buffer;
@@ -26,6 +27,9 @@ public:
 
 	Client &operator=(const Client &ref);
 
+	void setBot(const int &bot);
+	const bool &getBot(void) const;
+
 	void setFd(const int &fd);
 	const int &getFd(void) const;
 
@@ -40,6 +44,7 @@ public:
 	const std::string &getHostname(void) const;
 	const std::string &getRealname(void) const;
 	
+	bool isBot(void);
 	bool isAlive(void);
 	bool isRegistered(void);
 	
@@ -47,6 +52,8 @@ public:
 	int addWrite_buffer(std::string);
 	std::string getWrite_buffer(void);
 	int delWrite_buffer(std::string);
+private:
+	int _sendWelcomeMessage();
 };
 
 #endif

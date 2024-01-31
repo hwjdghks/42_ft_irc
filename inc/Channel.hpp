@@ -10,6 +10,7 @@ class Channel
 private:
 	bool						option[5];
 	int							limit;
+	Client						bot;
 	std::string					password;
 	std::string					topic;
 	std::string					name;

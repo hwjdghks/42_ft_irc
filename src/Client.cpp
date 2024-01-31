@@ -1,6 +1,7 @@
 #include "Client.hpp"
 #include <iostream>
-Client::Client(void) : fd(0), life(true)
+
+Client::Client(void) : fd(0), life(true), bot(false)
 {
 	regi[PASS] = false;
 	regi[NICK] = false;
@@ -29,6 +30,7 @@ Client &Client::operator=(const Client &ref)
 	this->password = ref.password;
 	this->nickname = ref.nickname;
 	this->username = ref.username;
+	this->hostname = ref.hostname;
 	this->realname = ref.realname;
 	this->channels = ref.channels;
 	return *this;

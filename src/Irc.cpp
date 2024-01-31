@@ -45,12 +45,15 @@ int Irc::createClient(int fd, std::string hostname)
 
 t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 {
+	std::vector<int> empty;
+	_setSendEvent(false, false, false, false, empty);
 	// 해당 fd의 클라이언트 찾아오기
 	Client *client = searchClient(fd);
 	// 메세지 리드버퍼에 저장
 	// 리드버퍼 해석 <개행 찾기>
 	// 없으면 종료
-	// 리시브 버퍼 해석
+	// 있다면 그 개수만큼 loop
+	// 리시브 메세지 해석
 	IRCMessage recv_msg;
 	// 명령어에 따라 동작하기
 	if (!client->isRegistered())
@@ -313,10 +316,12 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 					// RPL 476
 				else if (채널이 없음)
 					// RPL 403
-				else if (채널 소속이 아님)
+				else if (채널 소속이 아님 이거 MODE +n임 ㅇㅁㅇ)
 					// RPL
 				else
-					//
+					// 동작
+					if (메세지 내용이 ":/BOTNAME COMMAND")
+						// bot 동작시키기
 	return (SUCCESS);
 }
 
