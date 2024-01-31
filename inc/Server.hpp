@@ -27,10 +27,10 @@
 #define UDATA_FAIL_REGISTER 6
 
 /* 클라이언트 종료시 종료 이유를 보낼 다잉 메세지 */
-#define MSG_FAIL_JOIN_SERVER "Server is full"
-#define MSG_FAIL_REGISTER "Register timeout"
-#define MSG_FAIL_TIMEOUT "Connection lost"
-#define MSG_FAIL_SYSTEM "System call error"
+static const char *MSG_FAIL_JOIN_SERVER = "Server is full";
+static const char *MSG_FAIL_REGISTER = "Register timeout";
+static const char *MSG_FAIL_TIMEOUT = "Connection lost";
+static const char *MSG_FAIL_SYSTEM = "System call error";
 
 class Server
 {
