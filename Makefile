@@ -11,7 +11,7 @@ INC_PATH = ./inc/
 # FILES
 SRC_NAME = main.cpp \
 			Server.cpp Server_utils.cpp \
-			Irc.cpp Irc_rpl.cpp Irc_err.cpp \
+			Irc.cpp Irc_regi.cpp Irc_rpl.cpp Irc_err.cpp \
 			Channel.cpp \
 			Client.cpp
 
