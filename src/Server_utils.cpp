@@ -32,7 +32,7 @@ bool Server::pasreAndSetArguements(const char * const * argv)
  * 클라이언트 소켓의 연결 요청을 수락하고 기본 이벤트를 설정
  * 만약 에러가 발생하면 fd를 닫아 연결이 실패한 것으로 행동
 */
-bool Server::setNewClientSocket(const int &fd)
+bool Server::setNewClientSocket(void)
 {
 	struct sockaddr_in info;
 	socklen_t len = sizeof(info);
@@ -106,7 +106,7 @@ bool Server::recvMsg(const int &fd)
 	ssize_t size = recv(fd, buf, BUFSIZE - 1, 0);
 	if (size == -1)
 	{
-		if (!this->setReplyEventToClient(fd, control.quit(fd, MSG_FAIL_SYSTEM)));
+		if (!this->setReplyEventToClient(fd, control.quit(fd, MSG_FAIL_SYSTEM)))
 			return false;
 		return true;
 	}
@@ -139,7 +139,7 @@ bool Server::sendMsg(const int &fd, void *udata)
 	ssize_t len = send(fd, buf.c_str(), buf.size(), 0);
 	if (len == -1)
 	{
-		if (!this->setReplyEventToClient(fd, control.quit(fd, MSG_FAIL_SYSTEM)));
+		if (!this->setReplyEventToClient(fd, control.quit(fd, MSG_FAIL_SYSTEM)))
 			return false;
 		return true;
 	}
@@ -150,14 +150,14 @@ bool Server::sendMsg(const int &fd, void *udata)
 		 * size는 버퍼에 카피한 사이즈.
 		 * 해당 사이즈를 제외한 나머지를 롤백해야함.
 		 */
-		sender.rollbackBuf(buf/* 가져온 원본 버퍼 */, len/* 복사가 완료된 영역의 크기 */);
+		sender->rollbackBuf(buf/* 가져온 원본 버퍼 */, len/* 복사가 완료된 영역의 크기 */);
 	}
 	else
 		if (!offWriteEvnet(fd))
 			return false;
 	if ((!sender->isAlive())) /* 클라이언트를 종료시켜야할 경우 */
 	{
-		if (!this->setReplyEventToClient(fd, control.deleteClient(fd)));
+		if (!this->setReplyEventToClient(fd, control.deleteClient(fd)))
 			return false;
 		close(fd);
 	}
@@ -167,16 +167,19 @@ bool Server::sendMsg(const int &fd, void *udata)
 bool Server::handleTimerEvent(const int &fd, void *udata)
 {
 	t_send_event event;
-	int event_case = reinterpret_cast<int>(udata);
+	Client *client;
+	intptr_t event_case = reinterpret_cast<intptr_t>(udata);
 
 	switch (event_case)
 	{
 	case UDATA_CHECK_REIGISTER: /* 등록 시간제한이 지났을 경우 */
-		Client *client = control.searchClient(fd);
+		client = control.searchClient(fd);
 		if (!client->isRegistered())
+		{
 			event = control.quit(fd, MSG_FAIL_REGISTER);
-			if (!this->setReplyEventToClient(fd, event));
+			if (!this->setReplyEventToClient(fd, event))
 				return false;
+		}
 		break;
 	case UDATA_CHECK_CONNECT: /* ping을 보내야 함 */
 		event = control.ping(fd);
@@ -202,9 +205,9 @@ bool Server::handleTimerEvent(const int &fd, void *udata)
  */
 bool Server::sendSpecialMsg(const int &fd, void *udata)
 {
-	int event = reinterpret_cast<int>(udata);
+	intptr_t event_case = reinterpret_cast<intptr_t>(udata);
 
-	switch (event)
+	switch (event_case)
 	{
 	case UDATA_FAIL_JOIN_SERVER: /* 인원 제한으로 서버 등록 절차가 거부된 경우 */
 		send(fd, MSG_FAIL_JOIN_SERVER, sizeof(MSG_FAIL_JOIN_SERVER), 0);

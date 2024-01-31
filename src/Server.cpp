@@ -97,7 +97,7 @@ void Server::run(void)
 				if (current_event->flags & EV_ERROR)
 				{
 					std::cout << DEBUGMSG "ERROR\n";
-					if (current_event->ident == this->server_fd)
+					if (current_event->ident == static_cast<uintptr_t>(this->server_fd))
 					{
 						/* server socket error */
 						return this->stop();
@@ -111,10 +111,10 @@ void Server::run(void)
 					}
 					continue ;
 				}
-				if (current_event->ident == server_fd)
+				if (current_event->ident == static_cast<uintptr_t>(this->server_fd))
 				{
 					std::cout << DEBUGMSG "TRY ACCEPT\n";
-					if (!setNewClientSocket(current_event->ident))
+					if (!setNewClientSocket())
 						return this->stop();
 				}
 				else if (current_event->filter == EVFILT_READ)

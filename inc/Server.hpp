@@ -55,7 +55,7 @@ private:
 
 private: /* utility */
 	bool init(void);
-	bool setNewClientSocket(const int &fd);
+	bool setNewClientSocket(void);
 	bool setReplyEventToClient(const int &fd, const t_send_event &list);
 
 private: /* recv, send, timer */
