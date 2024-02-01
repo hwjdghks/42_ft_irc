@@ -126,9 +126,24 @@ t_send_event Irc::ping(int fd)
 t_send_event Irc::quit(int fd, const char *msg)
 {
 	// 해당 fd의 클라이언트를 찾는다
+	Client *client = searchClient(fd);
+	std::vector<int> fds;
 	// 해당 클라이언트가 속한 채널의 유저들을 찾는다
+	std::vector<Channel *> &channels = client->getChannels();
+	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+	{
+		Channel *curr_ch = *it;
+		std::vector<Client *>client_list = curr_ch->getUsers();
+		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 	// 해당 유저들의 fd를 t_send_event에 넣는다
+			if ((*cl_it)->getFd() != fd)
+			{
+				fds.push_back((*cl_it)->getFd());
+				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "QUIT :Quit: " + msg);
+			}
+	}
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
+	_setSendEvent(true, false, true, true, fds);
 	return (send_msg);
 }
 
