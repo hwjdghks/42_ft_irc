@@ -102,6 +102,11 @@ bool Client::isAlive(void)
 	return (life);
 }
 
+bool Client::isBot(void)
+{
+	return (bot);
+}
+
 bool Client::isRegistered(void)
 {
 	return (regi[PASS] && regi[NICK] && regi[USER]);

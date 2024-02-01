@@ -48,6 +48,9 @@ public:
 	bool isAlive(void);
 	bool isRegistered(void);
 	
+	int addRead_buffer(std::string);
+	std::string getLineOfRead_buffer(void);
+	int delRead_buffer(std::string);
 
 	int addWrite_buffer(std::string);
 	std::string getWrite_buffer(void);

@@ -45,20 +45,27 @@ int Irc::createClient(int fd, std::string hostname)
 
 t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 {
-	std::vector<int> empty;
-	_setSendEvent(false, false, false, false, empty);
+	std::string commandLine;
+
+	_clearSendEvent();
 	// 해당 fd의 클라이언트 찾아오기
 	Client *client = searchClient(fd);
 	// 메세지 리드버퍼에 저장
-	// 리드버퍼 해석 <개행 찾기>
-	// 없으면 종료
-	// 있다면 그 개수만큼 loop
-	// 리시브 메세지 해석
-	IRCMessage recv_msg;
-	// 명령어에 따라 동작하기
-	if (!client->isRegistered())
-		_register_executor(client, recv_msg);
-	_command_executor(client, recv_msg);
+	client->addRead_buffer(recv_buffer);
+	while (1)
+	{
+		// 명령줄 받아보기
+		commandLine = client->getLineOfRead_buffer();
+		// 만약 문자열이 공백이라면 loop 종료
+		if (commandLine.empty())
+			break ;
+		// 리시브 메세지 해석
+		IRCMessage recv_msg;
+		// 명령어에 따라 동작하기
+		if (!client->isRegistered())
+			_register_executor(client, recv_msg);
+		_command_executor(client, recv_msg);
+	}
 	return (send_msg);
 }
 
@@ -96,10 +103,34 @@ t_send_event Irc::deleteClient(int fd)
 
 int	Irc::_setSendEvent(bool recv_work, bool recv_time, bool recv_close, bool to_send, std::vector<int> fds)
 {
-	send_msg.recv_work = recv_work;
-	send_msg.recv_time = recv_time;
-	send_msg.recv_close = recv_close;
-	send_msg.to_send = to_send;
+	if (!send_msg.recv_work)
+		send_msg.recv_work = recv_work;
+	if (!send_msg.recv_time)
+		send_msg.recv_time = recv_time;
+	if (!send_msg.recv_close)
+		send_msg.recv_close = recv_close;
+	if (!send_msg.to_send)
+		send_msg.to_send = to_send;
+	if (send_msg.fds.empty())
+		send_msg.fds = fds;
+	else if (!fds.empty())
+	{
+		// send_msg.fds에 fds의 fd가 없다면 추가하기
+		std::vector<int>::iterator iter;
+		for (iter = fds.begin() ; iter != fds.end() ; iter++)
+			send_msg.fds.push_back(*iter);
+	}
+	return (SUCCESS);
+}
+
+int	Irc::_clearSendEvent()
+{
+	std::vector<int> fds;
+
+	send_msg.recv_work;
+	send_msg.recv_time;
+	send_msg.recv_close;
+	send_msg.to_send;
 	send_msg.fds = fds;
 	return (SUCCESS);
 }
