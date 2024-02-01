@@ -34,12 +34,12 @@ public:
 	int isInvite(std::string);
 	int delInvite(std::string);
 
-	int addOperator(Client);
-	int isOperator(std::string);
-	int delOperator(std::string);
+	bool addOperator(Client &client);
+	bool isOperator(const std::string &nickname) const;
+	void delOperator(const std::string &nickname);
 
-	int addUser(Client);
-	int isUser(std::string);
-	int delUser(std::string);
+	bool addUser(Client &client);
+	bool isUser(const std::string &nickname) const;
+	void delUser(const std::string &nickname);
 };
 #endif
