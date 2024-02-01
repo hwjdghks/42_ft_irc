@@ -73,18 +73,31 @@ Client *Irc::searchClient(int fd)
 {
 	Client *client;
 	// client vector를 순회하여 fd에 해당하는 클라이언트 가져오기
+	for(std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
+	{
+		if (it->getFd() == fd)
+		{
+			client = &(*it);
+			break ;
+		}
+	}
 	return (client);
 }
 
 t_send_event Irc::ping(int fd)
 {
 	// t_send_event에 fd를 넣는다
+	std::vector<int> fds;
+	fds.push_back(fd);
+	_setSendEvent(false, false, false, true, fds);
 	// 해당 fd의 클라이언트를 찾는다
+	Client *client = searchClient(fd);
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
+	client->addWrite_buffer("PING :" SERVERURL);
 	return (send_msg);
 }
 
-t_send_event Irc::quit(int fd, char *msg)
+t_send_event Irc::quit(int fd, const char *msg)
 {
 	// 해당 fd의 클라이언트를 찾는다
 	// 해당 클라이언트가 속한 채널의 유저들을 찾는다
@@ -96,8 +109,27 @@ t_send_event Irc::quit(int fd, char *msg)
 t_send_event Irc::deleteClient(int fd)
 {
 	// 해당 fd의 클라이언트를 찾는다
+	Client *client = searchClient(fd);
 	// 해당 클라이언트가 가입된 채널을 찾아 제거한다
+	std::vector<Channel *> channels = client->getChannels();
+	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+	{
+		Channel *curr_ch = *it;
+
+		if (curr_ch->isOperator(client->getNickname()))
+			curr_ch->delOperator(client->getNickname());
+		else if (curr_ch->isUser(client->getNickname()))
+			curr_ch->delUser(client->getNickname());
+	}
 	// 클라이언트 벡터에서 해당 클라이언트를 제거한다.
+	for (std::vector<Client>::iterator it = this->clients.begin(); it != clients.end(); it++)
+	{
+		if (it->getFd() == fd)
+		{
+			clients.erase(it);
+			break ;
+		}
+	}
 	return (send_msg);
 }
 

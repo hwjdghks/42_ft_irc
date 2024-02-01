@@ -36,6 +36,11 @@ Client &Client::operator=(const Client &ref)
 	return *this;
 }
 
+std::vector<Channel *> &Client::getChannels(void)
+{
+	return this->channels;
+}
+
 void Client::setFd(const int &fd)
 {
 	this->fd = fd;
