@@ -27,6 +27,8 @@ public:
 
 	Client &operator=(const Client &ref);
 
+	std::vector<Channel *> &getChannels(void);
+
 	void setBot(const int &bot);
 	const bool &getBot(void) const;
 
