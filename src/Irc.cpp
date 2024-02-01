@@ -102,8 +102,27 @@ t_send_event Irc::quit(int fd, const char *msg)
 t_send_event Irc::deleteClient(int fd)
 {
 	// 해당 fd의 클라이언트를 찾는다
+	Client *client = searchClient(fd);
 	// 해당 클라이언트가 가입된 채널을 찾아 제거한다
+	std::vector<Channel *> channels = client->getChannels();
+	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+	{
+		Channel *curr_ch = *it;
+
+		if (curr_ch->isOperator(client->getNickname()))
+			curr_ch->delOperator(client->getNickname());
+		else if (curr_ch->isUser(client->getNickname()))
+			curr_ch->delUser(client->getNickname());
+	}
 	// 클라이언트 벡터에서 해당 클라이언트를 제거한다.
+	for (std::vector<Client>::iterator it = this->clients.begin(); it != clients.end(); it++)
+	{
+		if (it->getFd() == fd)
+		{
+			clients.erase(it);
+			break ;
+		}
+	}
 	return (send_msg);
 }
 
