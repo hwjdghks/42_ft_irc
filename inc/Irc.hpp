@@ -45,6 +45,7 @@ private:
 	bool __isCommand(std::string cmd);
 	bool _isNickInUse(Client* cur_client, std::string to_be_nick);
 	bool isExistingChannel(std::string chName);
+	IRCMessage parseMessage(std::string message);
 private:
 	int _command_executor(Client *client, IRCMessage recv_msg);
 	int __cmd_user(Client *client, IRCMessage message);

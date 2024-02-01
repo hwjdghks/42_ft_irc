@@ -27,6 +27,8 @@ public:
 
 	Client &operator=(const Client &ref);
 
+	std::vector<Channel *> &getChannels(void);
+
 	void setBot(const int &bot);
 	const bool &getBot(void) const;
 
@@ -51,10 +53,13 @@ public:
 	bool isAlive(void);
 	bool isRegistered(void);
 	
+	int addRead_buffer(std::string);
+	std::string getLineOfRead_buffer(void);
+	int delRead_buffer();
 
 	int addWrite_buffer(std::string);
 	std::string getWrite_buffer(void);
-	int delWrite_buffer(std::string);
+	int delWrite_buffer();
 	void rollbackBuf(std::string buf, ssize_t len);
 
 private:

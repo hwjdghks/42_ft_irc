@@ -185,6 +185,7 @@ bool Server::handleTimerEvent(const int &fd, void *udata)
 		event = control.ping(fd);
 		if (!this->setReplyEventToClient(fd, event))
 			return false;
+		addTimerEvent(fd, TIMEOUT_CONNECT, UDATA_LOST_CONNECT);
 		break;
 	case UDATA_LOST_CONNECT: /* ping에 응답이 없을 경우 */
 		event = control.quit(fd, MSG_FAIL_TIMEOUT);

@@ -10,28 +10,6 @@
 
 #include "Irc.hpp"
 
-#define BACKLOG 5 /* 어느 크기가 적당할지 */
-#define MAX_CLIENT 10
-#define BUFSIZE 4096
-
-/* 각 클라이언트의 단계별 timeout 기본 세팅 */
-#define TIMEOUT_REGISTER 20
-#define TIMEOUT_CONNECT 120
-
-/* timer event 경우의 수 체크 */
-#define UDATA_CHECK_REIGISTER 1
-#define UDATA_CHECK_CONNECT 2
-#define UDATA_LOST_CONNECT 3
-#define UDATA_NEED_QUIT 4
-#define UDATA_FAIL_JOIN_SERVER 5
-#define UDATA_FAIL_REGISTER 6
-
-/* 클라이언트 종료시 종료 이유를 보낼 다잉 메세지 */
-static const char *MSG_FAIL_JOIN_SERVER = "Server is full";
-static const char *MSG_FAIL_REGISTER = "Register timeout";
-static const char *MSG_FAIL_TIMEOUT = "Connection lost";
-static const char *MSG_FAIL_SYSTEM = "System call error";
-
 class Server
 {
 public:
