@@ -37,12 +37,14 @@ private:
 	int	_setSendEvent(bool, bool, bool, bool, std::vector<int>);
 	int	_clearSendEvent();
 private:
+	IRCMessage parseMessage(const char message[]);
 	int _register_executor(Client *client, IRCMessage recv_msg);
 	int __register_user(Client *client, IRCMessage message);
 	int __register_pass(Client *client, IRCMessage message);
 	int __register_nick(Client *client, IRCMessage message);
 	bool __isCommand(std::string cmd);
 	bool _isNickInUse(Client* cur_client, std::string to_be_nick);
+	bool isExistingChannel(std::string chName);
 	IRCMessage parseMessage(std::string message);
 private:
 	int _command_executor(Client *client, IRCMessage recv_msg);
