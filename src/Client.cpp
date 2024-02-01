@@ -122,6 +122,7 @@ std::string Client::makeClientPrefix() const
     return this->getNickname() + "!" + \
            this->getUsername() + "@" + \
            this->getHostname();
+}
 
 int Client::addRead_buffer(std::string recv_buffer)
 {
