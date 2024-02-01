@@ -77,6 +77,17 @@ Client *Irc::searchClient(int fd)
 	return (client);
 }
 
+std::vector<int> Irc::getAllClientFd(void) const
+{
+	std::vector<int> fds;
+
+	for (std::vector<Client>::const_iterator it = clients.begin(); it != clients.end(); it++)
+	{
+		fds.push_back(it->getFd());
+	}
+	return fds;
+}
+
 t_send_event Irc::ping(int fd)
 {
 	// t_send_event에 fd를 넣는다

@@ -30,7 +30,7 @@ public:
 	t_send_event quit(int fd, const char *reason); // timeout, socket 문제
 	t_send_event deleteClient(int fd);
 
-	std::vector<int> getAllClientFd(void);
+	std::vector<int> getAllClientFd(void) const;
 
 private:
 	int _addBot();
