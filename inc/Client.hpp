@@ -43,6 +43,9 @@ public:
 	const std::string &getNickname(void) const;
 	const std::string &getHostname(void) const;
 	const std::string &getRealname(void) const;
+
+	std::string makeClientPrefix(void) const;
+	bool isMaxJoin(void);
 	
 	bool isBot(void);
 	bool isAlive(void);

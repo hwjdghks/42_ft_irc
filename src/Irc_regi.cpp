@@ -161,3 +161,15 @@ IRCMessage Irc::parseMessage(const char message[])
 
 	return ircMessage;
 }
+
+bool Irc::isExistingChannel(std::string chName)
+{
+	std::vector<Channel>::iterator it;
+	for(it = channels.begin(); it < channels.end(); it++)
+	{
+		if (it->getName() == chName)
+			return true;
+	}
+	return false;
+}
+

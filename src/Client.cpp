@@ -107,4 +107,14 @@ bool Client::isRegistered(void)
 	return (regi[PASS] && regi[NICK] && regi[USER]);
 }
 
+std::string Client::makeClientPrefix() const
+{
+    return this->getNickname() + "!" + \
+           this->getUsername() + "@" + \
+           this->getHostname();
+}
 
+bool Client::isMaxJoin(void)
+{
+	return (MAX_CHANNEL == this->channels.size());
+}
