@@ -1,6 +1,12 @@
 #include "Client.hpp"
 #include <iostream>
-Client::Client(void) {}
+
+Client::Client(void) : fd(0), life(true), bot(false)
+{
+	regi[PASS] = false;
+	regi[NICK] = false;
+	regi[USER] = false;
+}
 
 Client::Client(const Client &ref)
 {
@@ -15,6 +21,18 @@ Client &Client::operator=(const Client &ref)
 		return *this;
 	/* Edit */
 	this->fd = ref.fd;
+	this->life = ref.life;
+	this->regi[PASS] = ref.regi[PASS];
+	this->regi[NICK] = ref.regi[NICK];
+	this->regi[USER] = ref.regi[USER];
+	this->read_buffer = ref.read_buffer;
+	this->write_buffer = ref.write_buffer;
+	this->password = ref.password;
+	this->nickname = ref.nickname;
+	this->username = ref.username;
+	this->hostname = ref.hostname;
+	this->realname = ref.realname;
+	this->channels = ref.channels;
 	return *this;
 }
 
@@ -43,6 +61,11 @@ void Client::setNickname(const std::string &nickname)
 	this->nickname = nickname;
 }
 
+void Client::setHostname(const std::string &hostname)
+{
+	this->hostname = hostname;
+}
+
 void Client::setRealname(const std::string &realname)
 {
 	this->realname = realname;
@@ -64,17 +87,24 @@ const std::string &Client::getRealname(void) const
 	return this->realname;
 }
 
+const std::string &Client::getHostname(void) const
+{
+	return this->hostname;
+}
+
 const std::string &Client::getUsername(void) const
 {
 	return this->username;
 }
 
-void Client::setTime(void)
+bool Client::isAlive(void)
 {
-	this->last_connect_time = std::time(NULL);
+	return (life);
 }
 
-time_t Client::getTime(void) const
+bool Client::isRegistered(void)
 {
-	return this->last_connect_time;
+	return (regi[PASS] && regi[NICK] && regi[USER]);
 }
+
+
