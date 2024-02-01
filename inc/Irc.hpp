@@ -77,7 +77,7 @@ private: // irc_rpl.cpp
 	std::string _331_rpl_notopic(std::string prefix, std::string clientnick, std::string channelname);
 	std::string _332_rpl_topic(std::string prefix, std::string clientnick, std::string channelname, std::string topic);
 	std::string _341_rpl_inviting(std::string prefix, std::string clientnick, std::string channelname, std::string nick);
-	std::string _324_rpl_channelmodeis(std::string prefix, std::string clientnick, std::string mode);
+	std::string _324_rpl_channelmodeis(std::string prefix, std::string clientnick, std::string channelname, std::string mode, std::string mode_params);
 private: // irc_err.cpp
 	std::string _421_err_unknowncommand(std::string prefix, std::string clientnick, std::string command);
 	std::string _432_err_erroneusnickname(std::string prefix, std::string clientnick, std::string nick);
@@ -96,6 +96,8 @@ private: // irc_err.cpp
 	std::string _482_err_chanoprivsneeded(std::string prefix, std::string clientnick, std::string channelname);
 	std::string _472_err_unknownmode(std::string prefix, std::string clientnick, std::string chars);
 	std::string _467_err_keyset(std::string prefix, std::string clientnick, std::string channelname);
+	std::string _476_err_badchanmask(std::string prefix, std::string clientnick, std::string channelname);
+	std::string _696_err_invalidmodeparam(std::string prefix, std::string clientnick, std::string channelname);
 };
 
 #endif

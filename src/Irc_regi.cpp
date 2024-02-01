@@ -35,7 +35,6 @@ bool __isValidNick(const std::string &nick)
 		return false;
 	if (!std::all_of(nick.begin(), nick.end(), ___isValidChar))
 		return false;
-
 	return true;
 }
 
@@ -97,7 +96,7 @@ int Irc::__register_pass(Client* client, IRCMessage message)
 
 int Irc::__register_nick(Client* client, IRCMessage message)
 {
-	std::vector<int> fds(client->getFd());	
+	std::vector<int> fds(client->getFd());
 	if (message.parameters.size() == 0)
 	{
 		_setSendEvent(true, false, false, true, fds);
@@ -112,13 +111,13 @@ int Irc::__register_nick(Client* client, IRCMessage message)
 	}
 	else if (!__isValidNick(message.parameters[0]))
 	{
-		_setSendEvent(true, false, false, true, fds);		
+		_setSendEvent(true, false, false, true, fds);
         client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
 		return FAIL;
 	}
 	else
 	{
-		_setSendEvent(false, false, false, false, fds);		
+		_setSendEvent(false, false, false, false, fds);
 		client->setNickname(message.parameters[0]);
 		return SUCCESS;
 	}

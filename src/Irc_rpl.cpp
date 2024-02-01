@@ -55,8 +55,8 @@ std::string Irc::_341_rpl_inviting(std::string prefix, std::string clientnick, s
 	return (str);
 }
 
-std::string Irc::_324_rpl_channelmodeis(std::string prefix, std::string clientnick, std::string mode)
+std::string Irc::_324_rpl_channelmodeis(std::string prefix, std::string clientnick, std::string channelname, std::string mode, std::string mode_params)
 {
-	std::string str = prefix + " 324 " + clientnick + " " + mode + "\n";
+	std::string str = prefix + " 324 " + clientnick + " " + channelname  + " " + mode  + " " + mode_params + "\n";
 	return (str);
 }

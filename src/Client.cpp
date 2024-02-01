@@ -159,7 +159,11 @@ int Client::addWrite_buffer(std::string send_buffer)
 
 std::string Client::getWrite_buffer(void)
 {
-	return (write_buffer);
+	std::string temp;
+
+	temp = write_buffer;
+	write_buffer.clear();
+	return (temp);
 }
 
 int Client::delWrite_buffer()
@@ -170,7 +174,7 @@ int Client::delWrite_buffer()
 
 void Client::rollbackBuf(std::string buf, ssize_t len)
 {
-	write_buffer = write_buffer.substr(len + 1, read_buffer.size() - len);
+	write_buffer = buf.substr(len + 1, buf.size() - len);
 }
 
 bool Client::isMaxJoin(void)

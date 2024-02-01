@@ -101,3 +101,15 @@ std::string Irc::_467_err_keyset(std::string prefix, std::string clientnick, std
 	std::string str = prefix + " 467 " + clientnick + " " + channelname + " :Channel key already set" + "\n";
 	return (str);
 }
+
+std::string Irc::_476_err_badchanmask(std::string prefix, std::string clientnick, std::string channelname)
+{
+	std::string str = prefix + " 476 " + clientnick + " " + channelname + " :Bad Channel Mask" + "\n";
+	return (str);
+}
+
+std::string Irc::_696_err_invalidmodeparam(std::string prefix, std::string clientnick, std::string channelname)
+{
+	std::string str = prefix + " 467 " + clientnick + " " + channelname + " :need more param" + "\n";
+	return (str);
+}
