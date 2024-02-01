@@ -26,11 +26,12 @@ public:
 	int createClient(int fd, std::string hostname);
 	t_send_event executeCommand(int fd, std::string recv_buffer);
 	Client *searchClient(int fd);
+	Client *searchClient(const std::string &nickname);
 	t_send_event ping(int fd);
 	t_send_event quit(int fd, const char *reason); // timeout, socket 문제
 	t_send_event deleteClient(int fd);
 
-	std::vector<int> getAllClientFd(void);
+	std::vector<int> getAllClientFd(void) const;
 
 private:
 	int _addBot();

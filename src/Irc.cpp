@@ -71,7 +71,7 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 
 Client *Irc::searchClient(int fd)
 {
-	Client *client;
+	Client *client = NULL;
 	// client vector를 순회하여 fd에 해당하는 클라이언트 가져오기
 	for(std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
@@ -82,6 +82,32 @@ Client *Irc::searchClient(int fd)
 		}
 	}
 	return (client);
+}
+
+Client *Irc::searchClient(const std::string &nickname)
+{
+	Client *client = NULL;
+	// client vector를 순회하여 fd에 해당하는 클라이언트 가져오기
+	for(std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
+	{
+		if (it->getNickname() == nickname)
+		{
+			client = &(*it);
+			break ;
+		}
+	}
+	return (client);
+}
+
+std::vector<int> Irc::getAllClientFd(void) const
+{
+	std::vector<int> fds;
+
+	for (std::vector<Client>::const_iterator it = clients.begin(); it != clients.end(); it++)
+	{
+		fds.push_back(it->getFd());
+	}
+	return fds;
 }
 
 t_send_event Irc::ping(int fd)
@@ -118,11 +144,11 @@ t_send_event Irc::deleteClient(int fd)
 
 		if (curr_ch->isOperator(client->getNickname()))
 			curr_ch->delOperator(client->getNickname());
-		else if (curr_ch->isUser(client->getNickname()))
+		if (curr_ch->isUser(client->getNickname()))
 			curr_ch->delUser(client->getNickname());
 	}
 	// 클라이언트 벡터에서 해당 클라이언트를 제거한다.
-	for (std::vector<Client>::iterator it = this->clients.begin(); it != clients.end(); it++)
+	for (std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->getFd() == fd)
 		{
