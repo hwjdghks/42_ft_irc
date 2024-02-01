@@ -226,7 +226,7 @@ bool Irc::__isCommand(std::string cmd)
 	for (iter = commands.begin() ; iter != commands.end() ; std::advance(iter, 1))
 	{
 		if (cmd == *iter)
-			(true)
+			return (true);
 	}
 	return (false);
 }

@@ -117,6 +117,13 @@ bool Client::isRegistered(void)
 	return (regi[PASS] && regi[NICK] && regi[USER]);
 }
 
+std::string Client::makeClientPrefix() const
+{
+    return this->getNickname() + "!" + \
+           this->getUsername() + "@" + \
+           this->getHostname();
+}
+
 int Client::addRead_buffer(std::string recv_buffer)
 {
 	this->read_buffer += recv_buffer;
@@ -168,4 +175,9 @@ int Client::delWrite_buffer()
 void Client::rollbackBuf(std::string buf, ssize_t len)
 {
 	write_buffer = buf.substr(len + 1, buf.size() - len);
+}
+
+bool Client::isMaxJoin(void)
+{
+	return (MAX_CHANNEL == this->channels.size());
 }
