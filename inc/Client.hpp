@@ -45,15 +45,21 @@ public:
 	const std::string &getNickname(void) const;
 	const std::string &getHostname(void) const;
 	const std::string &getRealname(void) const;
+
+	std::string makeClientPrefix(void) const;
+	bool isMaxJoin(void);
 	
 	bool isBot(void);
 	bool isAlive(void);
 	bool isRegistered(void);
 	
+	int addRead_buffer(std::string);
+	std::string getLineOfRead_buffer(void);
+	int delRead_buffer();
 
 	int addWrite_buffer(std::string);
 	std::string getWrite_buffer(void);
-	int delWrite_buffer(std::string);
+	int delWrite_buffer();
 	void rollbackBuf(std::string buf, ssize_t len);
 
 private:

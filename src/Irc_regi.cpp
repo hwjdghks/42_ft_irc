@@ -66,6 +66,7 @@ int Irc::__register_user(Client *client, IRCMessage message)
 		{
 			_setSendEvent(false, false, false, false, fds);
 			client->setUsername(message.parameters[0]);
+			client->setRealname(message.parameters[3]);
 			return SUCCESS;
 		}
 	}
@@ -124,7 +125,7 @@ int Irc::__register_nick(Client* client, IRCMessage message)
 }
 
 
-IRCMessage Irc::parseMessage(const char message[])
+IRCMessage Irc::parseMessage(std::string message)
 {
 	IRCMessage ircMessage;
 	
@@ -161,3 +162,15 @@ IRCMessage Irc::parseMessage(const char message[])
 
 	return ircMessage;
 }
+
+bool Irc::isExistingChannel(std::string chName)
+{
+	std::vector<Channel>::iterator it;
+	for(it = channels.begin(); it < channels.end(); it++)
+	{
+		if (it->getName() == chName)
+			return true;
+	}
+	return false;
+}
+
