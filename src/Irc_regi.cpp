@@ -1,10 +1,16 @@
 #include "Irc.hpp"
+#include <sstream>
 
 
 std::string _str_toupper(std::string s)
 {
     std::transform(s.begin(), s.end(), s.begin(), ::toupper);
     return s;
+}
+
+bool ___isValidChar(const char c) 
+{
+	return (std::isalnum(c) || c == '-' || c == '_') && std::isprint(c) && !std::isspace(c);
 }
 
 bool __isValidChannelName(const std::string &chName)
@@ -27,17 +33,23 @@ bool __isValidNick(const std::string &nick)
 {
 	if (nick.length() > 9)
 		return false;
-	if !(std::all_of(nick.begin(), nick.end(), ___isValidChar))
+	if (!std::all_of(nick.begin(), nick.end(), ___isValidChar))
 		return false;
 
 	return true;
 }
 
-bool ___isValidChar(const char c) 
+bool Irc::_isNickInUse(Client* cur_client, std::string to_be_nick)
 {
-	return (std::isalnum(c) || c == '-' || c == '_') && std::isprint(c) && !std::isspace(c);
+	for (std::vector<Client>::iterator it = clients.begin(); it < clients.end(); it++)
+	{
+		if (cur_client->getFd() == it->getFd())
+			continue;
+		if (it->getNickname() == to_be_nick)
+			return true;
+	}
+	return false;
 }
-
 
 int Irc::__register_user(Client *client, IRCMessage message)
 {
@@ -91,13 +103,13 @@ int Irc::__register_nick(Client* client, IRCMessage message)
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 		return FAIL;
 	}
-	else if (isDupNick(client, message.parameters[0])) // nick 중복 여부 확인
+	else if (_isNickInUse(client, message.parameters[0])) // nick 중복 여부 확인
 	{
 		_setSendEvent(true, false, false, true, fds);
 		client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
 		return FAIL;
 	}
-	else if !(__isValidNick(message.parameters[0]))
+	else if (!__isValidNick(message.parameters[0]))
 	{
 		_setSendEvent(true, false, false, true, fds);		
         client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
@@ -118,7 +130,6 @@ IRCMessage Irc::parseMessage(const char message[])
 	
 	std::istringstream iss(message);
 	std::string token;
-	size_t found;
 
 	// Extracting prefix
 	if (message[0] == ':') 
