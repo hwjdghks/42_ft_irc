@@ -1,7 +1,7 @@
 #include "Client.hpp"
 #include <iostream>
 
-Client::Client(void) : fd(0), life(true), bot(false)
+Client::Client(void) : fd(0), bot(false), life(true)
 {
 	regi[PASS] = false;
 	regi[NICK] = false;
