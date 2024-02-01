@@ -29,6 +29,8 @@ public:
 	std::string getPassword(void);
 	std::string getTopic(void);
 	std::string getName(void);
+	std::vector<Client *> &getOperators(void);
+	std::vector<Client *> &getUsers(void);
 
 	int addInvite(std::string);
 	int isInvite(std::string);

@@ -41,6 +41,16 @@ Channel &Channel::operator=(const Channel &ref)
 	return *this;
 }
 
+std::vector<Client *> &Channel::getOperators(void)
+{
+	return this->operators;
+}
+
+std::vector<Client *> &Channel::getUsers(void)
+{
+	return this->users;
+}
+
 bool Channel::addOperator(Client &client)
 {
 	if (isOperator(client.getNickname()))
