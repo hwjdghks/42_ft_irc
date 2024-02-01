@@ -77,7 +77,7 @@ t_send_event Irc::ping(int fd)
 	return (send_msg);
 }
 
-t_send_event Irc::quit(int fd, char *msg)
+t_send_event Irc::quit(int fd, const char *msg)
 {
 	// 해당 fd의 클라이언트를 찾는다
 	// 해당 클라이언트가 속한 채널의 유저들을 찾는다
