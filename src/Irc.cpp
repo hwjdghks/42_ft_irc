@@ -66,6 +66,14 @@ Client *Irc::searchClient(int fd)
 {
 	Client *client;
 	// client vector를 순회하여 fd에 해당하는 클라이언트 가져오기
+	for(std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
+	{
+		if (it->getFd() == fd)
+		{
+			client = &(*it);
+			break ;
+		}
+	}
 	return (client);
 }
 
