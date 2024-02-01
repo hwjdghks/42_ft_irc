@@ -60,7 +60,7 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 		if (commandLine.empty())
 			break ;
 		// 리시브 메세지 해석
-		IRCMessage recv_msg;
+		IRCMessage recv_msg = parseMessage(recv_buffer);
 		// 명령어에 따라 동작하기
 		if (!client->isRegistered())
 			_register_executor(client, recv_msg);
@@ -182,6 +182,10 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 	return (SUCCESS);
 }
 
+/* Irc_regi.cpp에서 구현됨
+동작의 정의가 있는 부분이라 일단 주석 처리만 해 둔 상태
+추후 동작 확인할 때 사용하고 확인이 완료되어 필요성이 사라진다면 삭제 요망
+
 int Irc::__register_user(Client *client, IRCMessage message)
 {
 	if (param 부족함)
@@ -214,6 +218,7 @@ int Irc::__register_nick(Client *client, IRCMessage message)
 		// 동작
 	return (SUCCESS);
 }
+*/
 
 bool Irc::__isCommand(std::string cmd)
 {
