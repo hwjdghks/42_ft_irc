@@ -80,8 +80,13 @@ Client *Irc::searchClient(int fd)
 t_send_event Irc::ping(int fd)
 {
 	// t_send_event에 fd를 넣는다
+	std::vector<int> fds;
+	fds.push_back(fd);
+	_setSendEvent(false, false, false, true, fds);
 	// 해당 fd의 클라이언트를 찾는다
+	Client *client = searchClient(fd);
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
+	client->addWrite_buffer("PING :" SERVERURL);
 	return (send_msg);
 }
 
