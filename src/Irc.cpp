@@ -201,10 +201,18 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 		__register_pass(client, recv_msg);
 	else if (recv_msg.command == "NICK")
 		__register_nick(client, recv_msg);
-	else if (__isCommand(recv_msg.command))
-		// RPL_451_err_notregistered
-	if (client->isRegistered())
-		// RPL_001_rpl_welcome
+	else if (__isCommand(recv_msg.command)) // RPL_451_err_notregistered
+	{
+		std::vector<int> fds(client->getFd());
+		_setSendEvent(true, false, false, true, fds);
+		client->addWrite_buffer(_451_err_notregistered(SERVERURL, client->getNickname()));
+	}
+	if (client->isRegistered()) // RPL_001_rpl_welcome
+	{
+		std::vector<int> fds(client->getFd());
+		_setSendEvent(true, true, false, true, fds);
+		client->addWrite_buffer(_001_rpl_welcome(SERVERURL, client->getNickname(), client->makeClientPrefix()));
+	}
 	return (SUCCESS);
 }
 
