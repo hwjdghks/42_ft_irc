@@ -2,8 +2,7 @@
 #define CHANNEL_HPP
 
 #include "def.hpp"
-
-class Client;
+#include "Client.hpp"
 
 class Channel
 {

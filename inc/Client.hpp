@@ -52,6 +52,8 @@ public:
 	int addWrite_buffer(std::string);
 	std::string getWrite_buffer(void);
 	int delWrite_buffer(std::string);
+	void rollbackBuf(std::string buf, ssize_t len);
+
 private:
 	int _sendWelcomeMessage();
 };

@@ -27,7 +27,7 @@ public:
 	t_send_event executeCommand(int fd, std::string recv_buffer);
 	Client *searchClient(int fd);
 	t_send_event ping(int fd);
-	t_send_event quit(int fd, char *reason); // timeout, socket 문제
+	t_send_event quit(int fd, const char *reason); // timeout, socket 문제
 	t_send_event deleteClient(int fd);
 
 	std::vector<int> getAllClientFd(void);

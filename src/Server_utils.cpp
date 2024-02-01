@@ -143,7 +143,7 @@ bool Server::sendMsg(const int &fd, void *udata)
 			return false;
 		return true;
 	}
-	if (len < buf.size())
+	if (static_cast<std::size_t>(len) < buf.size())
 	{
 		/* 
 		 * need buffer roll back 
@@ -344,7 +344,7 @@ bool Server::closeKqueue(void) const
 void Server::stop(void)
 {
 	/* delete all client and close client socket */
-	std::vector<int> fds = control.getAllFd();
+	std::vector<int> fds = control.getAllClientFd();
 	for(std::size_t idx = 0; idx < fds.size(); idx++)
 		close(fds[idx]);
 	close(kq);
