@@ -1,47 +1,59 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <string>
-#include <vector>
+#include "def.hpp"
 
-#include "Channel.hpp"
-
-enum {
-	PASS, NICK, USER
-};
+class Channel;
 
 class Client
 {
+private:
+	int						fd;
+	bool					bot;
+	bool					life;
+	bool					regi[3];
+	std::string				read_buffer;
+	std::string				write_buffer;
+	std::string				password;
+	std::string				nickname;
+	std::string				username;
+	std::string				hostname;
+	std::string				realname;
+	std::vector<Channel *>	channels;
 public:
 	Client();
 	Client(const Client &ref);
 	~Client();
 
 	Client &operator=(const Client &ref);
+
+	void setBot(const int &bot);
+	const bool &getBot(void) const;
+
 	void setFd(const int &fd);
 	const int &getFd(void) const;
-	void setTime(void);
-	time_t getTime(void) const;
 
 	void setPassword(const std::string &password);
-	void setUsername(const std::string &username);	
+	void setUsername(const std::string &username);
 	void setNickname(const std::string &nickname);
-	void setRealname(const std::string &realname);		
+	void setHostname(const std::string &hostname);
+	void setRealname(const std::string &realname);
 	const std::string &getPassword(void) const;
-	const std::string &getUsername(void) const;	
+	const std::string &getUsername(void) const;
 	const std::string &getNickname(void) const;
-	const std::string &getRealname(void) const;	
+	const std::string &getHostname(void) const;
+	const std::string &getRealname(void) const;
+	
+	bool isBot(void);
+	bool isAlive(void);
+	bool isRegistered(void);
 	
 
+	int addWrite_buffer(std::string);
+	std::string getWrite_buffer(void);
+	int delWrite_buffer(std::string);
 private:
-	int						fd;
-	bool					regi[3];
-	auto					read_buffer;
-	auto					write_buffer;
-	std::vector<Channel *>	chans;
-	std::string				password;
-	std::string				nickname;
-	std::string				username;
-	std::string				realname;
+	int _sendWelcomeMessage();
 };
+
 #endif
