@@ -173,7 +173,7 @@ int	Irc::_setSendEvent(bool recv_work, bool recv_time, bool recv_close, bool to_
 		send_msg.fds = fds;
 	else if (!fds.empty())
 	{
-		// send_msg.fds에 fds의 fd가 없다면 추가하기
+		// send_msg.fds에 fd 추가하기
 		std::vector<int>::iterator iter;
 		for (iter = fds.begin() ; iter != fds.end() ; iter++)
 			send_msg.fds.push_back(*iter);
@@ -304,6 +304,9 @@ int Irc::_command_executor(Client *client, IRCMessage recv_msg)
 
 int __cmd_user(Client *client, IRCMessage message)
 {
+	std::vector<int> fds;
+	fds.push_back(fd);
+	_setSendEvent(false, false, false, true, fds);
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else // RPL_462_err_alreadyregisterd
@@ -313,6 +316,9 @@ int __cmd_user(Client *client, IRCMessage message)
 
 int __cmd_pass(Client *client, IRCMessage message)
 {
+	std::vector<int> fds;
+	fds.push_back(fd);
+	_setSendEvent(false, false, false, true, fds);
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else // RPL_462_err_alreadyregisterd
@@ -322,17 +328,28 @@ int __cmd_pass(Client *client, IRCMessage message)
 
 int __cmd_nick(Client *client, IRCMessage message)
 {
+	std::vector<int> fds;
+	fds.push_back(fd);
+	_setSendEvent(false, false, false, true, fds);
+	fds.clear();
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else if (이미 등록된 닉네임)
-		// RPL_433_err_nicknameinuse
-	else if (사용할 수 없는 문자 포함 ('#', ',', ' ', '@' 등))
-		// RPL_432_err_erroneusnickname
+	else if (_isNickInUse(client, message.parameters[0])) // RPL_433_err_nicknameinuse
+		client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
+	else if (사용할 수 없는 문자 포함 ('#', ',', ' ', '@' 등)) // RPL_432_err_erroneusnickname
+		client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
-		// 동작
+	{
+		// 동작 timestamp
+		_setSendEvent(true, true, false, true, fds);
 		// 자기 자신에게 전송
 		// client가 소속된 channel의 모든 유저에게 전송
-		// timestamp
+		// current client의 channel size만큼 반복
+		// 해당 channel의 send_msg 제작
+		// channel은 user size만큼 반복
+		// 각 클라이언트의 fd를 저장
+		// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+	}
 	return (SUCCESS);
 }
 
