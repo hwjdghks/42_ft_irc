@@ -112,4 +112,52 @@ bool Client::isRegistered(void)
 	return (regi[PASS] && regi[NICK] && regi[USER]);
 }
 
+int Client::addRead_buffer(std::string recv_buffer)
+{
+	this->read_buffer += recv_buffer;
+	return (SUCCESS);
+}
+
+std::string Client::getLineOfRead_buffer(void)
+{
+	std::string res;
+	size_t loc;
+
+	res.clear();
+	loc = read_buffer.find('\n');
+	if (loc != std::string::npos)
+	{
+		res = read_buffer.substr(0, loc);
+		read_buffer = read_buffer.substr(loc + 1, read_buffer.size() - loc);
+	}
+	return (res);
+}
+
+int Client::delRead_buffer()
+{
+	read_buffer.clear();
+	return (SUCCESS);
+}
+
+int Client::addWrite_buffer(std::string send_buffer)
+{
+	this->write_buffer += send_buffer;
+	return (SUCCESS);
+}
+
+std::string Client::getWrite_buffer(void)
+{
+	return (write_buffer);
+}
+
+int Client::delWrite_buffer()
+{
+	write_buffer.clear();
+	return (SUCCESS);
+}
+
+void Client::rollbackBuf(std::string buf, ssize_t len)
+{
+	write_buffer = write_buffer.substr(len + 1, read_buffer.size() - len);
+}
 
