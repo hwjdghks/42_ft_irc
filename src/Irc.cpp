@@ -137,11 +137,11 @@ t_send_event Irc::deleteClient(int fd)
 
 		if (curr_ch->isOperator(client->getNickname()))
 			curr_ch->delOperator(client->getNickname());
-		else if (curr_ch->isUser(client->getNickname()))
+		if (curr_ch->isUser(client->getNickname()))
 			curr_ch->delUser(client->getNickname());
 	}
 	// 클라이언트 벡터에서 해당 클라이언트를 제거한다.
-	for (std::vector<Client>::iterator it = this->clients.begin(); it != clients.end(); it++)
+	for (std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->getFd() == fd)
 		{
