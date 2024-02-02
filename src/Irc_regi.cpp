@@ -13,7 +13,7 @@ bool ___isValidChar(const char c)
 	return (std::isalnum(c) || c == '-' || c == '_') && std::isprint(c) && !std::isspace(c);
 }
 
-bool __isValidChannelName(const std::string &chName)
+bool Irc::__isValidChannelName(const std::string &chName)
 {
 	std::string tmpStr;
 	if (chName.empty())
@@ -29,7 +29,7 @@ bool __isValidChannelName(const std::string &chName)
 	return true;
 }
 
-bool __isValidNick(const std::string &nick)
+bool Irc::__isValidNick(const std::string &nick)
 {
 	if (nick.length() > 9)
 		return false;
@@ -57,7 +57,7 @@ int Irc::__register_user(Client *client, IRCMessage message)
 	{
 		if ( client->getUsername() != "")
 		{
-			_setSendEvent(true, false, false, true, fds);
+			_setSendEvent(false, false, false, true, fds);
 			client->addWrite_buffer(_462_err_alreadyregisterd(SERVERURL, client->getNickname()));
 			return FAIL;
 		}
@@ -71,7 +71,7 @@ int Irc::__register_user(Client *client, IRCMessage message)
 	}
 	else
 	{
-		_setSendEvent(true, false, false, true, fds);		
+		_setSendEvent(false, false, false, true, fds);		
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 		return FAIL;
 	}
@@ -82,7 +82,7 @@ int Irc::__register_pass(Client* client, IRCMessage message)
 	std::vector<int> fds(client->getFd());
 	if (message.parameters.size() == 0)
 	{
-		_setSendEvent(true, false, false, true, fds);
+		_setSendEvent(false, false, false, true, fds);
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 		return FAIL;
     }
@@ -99,19 +99,19 @@ int Irc::__register_nick(Client* client, IRCMessage message)
 	std::vector<int> fds(client->getFd());
 	if (message.parameters.size() == 0)
 	{
-		_setSendEvent(true, false, false, true, fds);
+		_setSendEvent(false, false, false, true, fds);
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 		return FAIL;
 	}
 	else if (_isNickInUse(client, message.parameters[0])) // nick 중복 여부 확인
 	{
-		_setSendEvent(true, false, false, true, fds);
+		_setSendEvent(false, false, false, true, fds);
 		client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
 		return FAIL;
 	}
 	else if (!__isValidNick(message.parameters[0]))
 	{
-		_setSendEvent(true, false, false, true, fds);
+		_setSendEvent(false, false, false, true, fds);
         client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
 		return FAIL;
 	}

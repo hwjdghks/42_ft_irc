@@ -47,6 +47,8 @@ private:
 	bool _isNickInUse(Client* cur_client, std::string to_be_nick);
 	bool isExistingChannel(std::string chName);
 	IRCMessage parseMessage(std::string message);
+	bool __isValidNick(const std::string &nick);
+	bool __isValidChannelName(const std::string &chName);
 private:
 	int _command_executor(Client *client, IRCMessage recv_msg);
 	int __cmd_user(Client *client, IRCMessage message);
