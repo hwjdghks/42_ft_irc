@@ -1,5 +1,6 @@
 #include "Irc.hpp"
 #include <iostream> /* test header */
+#include <sstream>
 
 Irc::Irc(void) : password(NULL), clients(NULL), channels(NULL)
 {
@@ -464,8 +465,11 @@ int Irc::__cmd_list(Client *client, IRCMessage message)
 		std::vector<Client *>client_list = curr_ch->getUsers();
 		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			cnt++;
+		std::stringstream ss;
+		ss << cnt;
+		std::string user_num = ss.str();
 		// RPL_322_rpl_list
-		client->addWrite_buffer(_322_rpl_list(SERVERURL, client->getNickname(), (*it)->getName(), cnt, (*it)->getTopic()));	
+		client->addWrite_buffer(_322_rpl_list(SERVERURL, client->getNickname(), (*it)->getName(), user_num, (*it)->getTopic()));	
 	}
 	// RPL_323_rpl_listend
 	client->addWrite_buffer(_323_rpl_listend(SERVERURL, client->getNickname()));
@@ -474,55 +478,74 @@ int Irc::__cmd_list(Client *client, IRCMessage message)
 
 int Irc::__cmd_who(Client *client, IRCMessage message)
 {
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
+	_setSendEvent(true, false, false, true, fds);
+
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else if (_is_nick_exist(message.parameters[0]))
-		// RPL_352_rpl_whoreply
-	else if (_is_channel_exist(message.parameters[0]))
-		for (해당 채널의 유저를 순회하며 출력)
+	else if (!__isValidChannelName(message.parameters[0]))
+		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
+	else if (!isExistingChannel(message.parameters[0]))
+		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
+	else
+	{
+		std::vector<Channel>::iterator iter;
+		for (iter = channels.begin(); iter != channels.end() ; iter++)
+			if (iter->getName() == message.parameters[0])
+				break ;
+		std::vector<Client *>client_list = iter->getUsers();
+		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+		{
 			// RPL_352_rpl_whoreply
-	// RPL_315_rpl_endofwho
-	// 자기 자신에게 출력
-	// timestamp
+			if (iter->isOperator((*cl_it)->getNickname()))
+				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, client->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "@", (*cl_it)->getRealname()));
+			else
+				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, client->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "", (*cl_it)->getRealname()));
+		}
+		// RPL_315_rpl_endofwho
+		client->addWrite_buffer(_315_rpl_endofwho(SERVERURL, client->getNickname(), message.parameters[0]));
+		_setSendEvent(true, true, false, true, fds);
+	}
 	return (SUCCESS);
 }
 
 int Irc::__cmd_quit(Client *client, IRCMessage message)
 {
-	if (message.parameters.size() == 0)
-		// 동작 : 메세지 공란
-	else
-		// 동작 : 메세지 같이 출력
-	// 자기 자신에게 출력
-	// client가 소속된 channel의 모든 유저에게 전송
-
-	else
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
+	_setSendEvent(true, false, true, true, fds);
+	std::vector<Channel *> &channels = client->getChannels();
+	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
-		// 동작 timestamp
-		client->setNickname(message.parameters[0]);
-		// client가 소속된 channel의 모든 유저에게 전송
-		// current client의 channel size만큼 반복
-		std::vector<Channel *> &channels = client->getChannels();
-		for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
-		{
-			// 해당 channel의 send_msg 제작
-			// channel은 user size만큼 반복
-			Channel *curr_ch = *it;
-			std::vector<Client *>client_list = curr_ch->getUsers();
-			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
-				if ((*cl_it)->getFd() != client->getFd())
+		Channel *curr_ch = *it;
+		std::vector<Client *>client_list = curr_ch->getUsers();
+		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+	// 해당 유저들의 fd를 t_send_event에 넣는다
+			if ((*cl_it)->getFd() != client->getFd())
+			{
+				if ((*cl_it)->isAlive())
+					fds.push_back((*cl_it)->getFd());
+				if (message.parameters.size() == 0)
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "QUIT :Quit: " + QUITMSG);
+				else
 				{
-					// 각 클라이언트의 fd를 저장
-					// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
-					if ((*cl_it)->isAlive())
-						fds.push_back((*cl_it)->getFd());
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "NICK " + message.parameters[0]);
-				} // 만약 문제가 있다면 param[0]이 :으로 시작하지 않는다는 차이점일수도 있음
-		}
-		// 해당 유저들의 fd를 t_send_event에 넣는다
-		_setSendEvent(true, true, false, true, fds);
+					std::vector<std::string>::iterator iter = message.parameters.begin();
+					std::string msg = *iter;
+					iter++;
+					for (; iter != message.parameters.end() ; iter++)
+					{
+						msg = msg + " " + *iter;
+					}
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "QUIT :Quit: " + msg);
+				}
+			}
 	}
-
+	// write buffer에 PING 메세지를 넣고 t_send_event 반환
+	_setSendEvent(true, false, true, true, fds);
+	client->setLife(false);
 	return (SUCCESS);
 }
 

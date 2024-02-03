@@ -67,8 +67,6 @@ private:
 	int __cmd_invite(Client *client, IRCMessage message);
 	int __cmd_mode(Client *client, IRCMessage message);
 	int __not_a_command(Client *client, IRCMessage message);
-	int ___isPassibleNickName();
-	int ___isPassibleChannelName();
 private: // irc_rpl.cpp
 	std::string _001_rpl_welcome(std::string prefix, std::string clientnick, std::string user_prefix);
 	std::string _321_rpl_liststart(std::string prefix, std::string clientnick);

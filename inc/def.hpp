@@ -31,6 +31,7 @@ static const char *MSG_FAIL_SYSTEM = "System call error";
 # define SUCCESS 1
 # define FAIL 0
 
+# define QUITMSG "Client exited"
 # define TIMEOUT "time out"
 # define SOCKETERR "socket err"
 

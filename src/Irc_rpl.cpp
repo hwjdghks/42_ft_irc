@@ -14,7 +14,7 @@ std::string Irc::_321_rpl_liststart(std::string prefix, std::string clientnick)
 
 std::string Irc::_322_rpl_list(std::string prefix, std::string clientnick, std::string channelname, std::string usercnt, std::string topic)
 {
-	std::string str = prefix + " 322 " + clientnick + " " + channelname + " " + usercnt + ": " + topic + "\n";
+	std::string str = prefix + " 322 " + clientnick + " " + channelname + " " + usercnt + " :" + topic + "\n";
 	return (str);
 }
 
