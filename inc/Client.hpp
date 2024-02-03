@@ -29,11 +29,13 @@ public:
 
 	std::vector<Channel *> &getChannels(void);
 
-	void setBot(const int &bot);
+	void setBot(const bool &bot);
 	const bool &getBot(void) const;
 
 	void setFd(const int &fd);
 	const int &getFd(void) const;
+
+	void setLife(const bool &life);
 
 	void setPassword(const std::string &password);
 	void setUsername(const std::string &username);

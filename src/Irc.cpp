@@ -52,7 +52,7 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 	Client *client = searchClient(fd);
 	// 메세지 리드버퍼에 저장
 	client->addRead_buffer(recv_buffer);
-	while (1)
+	while (client->isAlive())
 	{
 		// 명령줄 받아보기
 		commandLine = client->getLineOfRead_buffer();
@@ -191,7 +191,16 @@ int	Irc::_setSendEvent(bool recv_work, bool recv_time, bool recv_close, bool to_
 		// send_msg.fds에 fd 추가하기
 		std::vector<int>::iterator iter;
 		for (iter = fds.begin() ; iter != fds.end() ; iter++)
-			send_msg.fds.push_back(*iter);
+		{
+			std::vector<int>::iterator it;
+			for (it = send_msg.fds.begin() ; it != send_msg.fds.end() ; it++)
+			{
+				if (*it == *iter)
+					break;
+			}
+			if (it == send_msg.fds.end())
+				send_msg.fds.push_back(*iter);
+		}
 	}
 	return (SUCCESS);
 }
@@ -317,10 +326,10 @@ int Irc::_command_executor(Client *client, IRCMessage recv_msg)
 	return (SUCCESS);
 }
 
-int __cmd_user(Client *client, IRCMessage message)
+int Irc::__cmd_user(Client *client, IRCMessage message)
 {
 	std::vector<int> fds;
-	fds.push_back(fd);
+	fds.push_back(client->getFd());
 	_setSendEvent(false, false, false, true, fds);
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
@@ -329,10 +338,10 @@ int __cmd_user(Client *client, IRCMessage message)
 	return (SUCCESS);
 }
 
-int __cmd_pass(Client *client, IRCMessage message)
+int Irc::__cmd_pass(Client *client, IRCMessage message)
 {
 	std::vector<int> fds;
-	fds.push_back(fd);
+	fds.push_back(client->getFd());
 	_setSendEvent(false, false, false, true, fds);
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
@@ -341,17 +350,17 @@ int __cmd_pass(Client *client, IRCMessage message)
 	return (SUCCESS);
 }
 
-int __cmd_nick(Client *client, IRCMessage message)
+int Irc::__cmd_nick(Client *client, IRCMessage message)
 {
 	std::vector<int> fds;
-	fds.push_back(fd);
+	fds.push_back(client->getFd());
 	_setSendEvent(false, false, false, true, fds);
 	fds.clear();
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else if (_isNickInUse(client, message.parameters[0])) // RPL_433_err_nicknameinuse
 		client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
-	else if (사용할 수 없는 문자 포함 ('#', ',', ' ', '@' 등)) // RPL_432_err_erroneusnickname
+	else if (__isValidNick(message.parameters[0])) // RPL_432_err_erroneusnickname
 		client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
 	{

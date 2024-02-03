@@ -41,6 +41,21 @@ std::vector<Channel *> &Client::getChannels(void)
 	return this->channels;
 }
 
+void Client::setBot(const bool &bot)
+{
+	this->bot = bot;
+}
+
+const bool &Client::getBot(void) const
+{
+	return (bot);
+}
+
+void Client::setLife(const bool &life)
+{
+	this->life = life;
+}
+
 void Client::setFd(const int &fd)
 {
 	this->fd = fd;
