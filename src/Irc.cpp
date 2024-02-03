@@ -395,7 +395,7 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 					if ((*cl_it)->isAlive())
 						fds.push_back((*cl_it)->getFd());
 					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "NICK " + message.parameters[0]);
-				}
+				} // 만약 문제가 있다면 param[0]이 :으로 시작하지 않는다는 차이점일수도 있음
 		}
 		// 해당 유저들의 fd를 t_send_event에 넣는다
 		_setSendEvent(true, true, false, true, fds);
