@@ -52,7 +52,9 @@ bool Irc::_isNickInUse(Client* cur_client, std::string to_be_nick)
 
 int Irc::__register_user(Client *client, IRCMessage message)
 {
-	std::vector<int> fds(client->getFd());
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
 	if (message.parameters.size() >= 4)
 	{
 		if ( client->getUsername() != "")
@@ -79,7 +81,9 @@ int Irc::__register_user(Client *client, IRCMessage message)
 
 int Irc::__register_pass(Client* client, IRCMessage message)
 {
-	std::vector<int> fds(client->getFd());
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
 	if (message.parameters.size() == 0)
 	{
 		_setSendEvent(false, false, false, true, fds);
@@ -96,7 +100,9 @@ int Irc::__register_pass(Client* client, IRCMessage message)
 
 int Irc::__register_nick(Client* client, IRCMessage message)
 {
-	std::vector<int> fds(client->getFd());
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
 	if (message.parameters.size() == 0)
 	{
 		_setSendEvent(false, false, false, true, fds);
@@ -172,4 +178,3 @@ bool Irc::isExistingChannel(std::string chName)
 	}
 	return false;
 }
-

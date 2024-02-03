@@ -141,7 +141,8 @@ std::string Client::makeClientPrefix() const
 
 int Client::addRead_buffer(std::string recv_buffer)
 {
-	this->read_buffer += recv_buffer;
+	if (life)
+		this->read_buffer += recv_buffer;
 	return (SUCCESS);
 }
 
@@ -168,7 +169,8 @@ int Client::delRead_buffer()
 
 int Client::addWrite_buffer(std::string send_buffer)
 {
-	this->write_buffer += send_buffer;
+	if (life)
+		this->write_buffer += send_buffer;
 	return (SUCCESS);
 }
 

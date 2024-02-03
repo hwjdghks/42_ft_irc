@@ -112,12 +112,14 @@ std::vector<int> Irc::getAllClientFd(void) const
 
 t_send_event Irc::ping(int fd)
 {
-	// t_send_event에 fd를 넣는다
-	std::vector<int> fds;
-	fds.push_back(fd);
-	_setSendEvent(false, false, false, true, fds);
+	_clearSendEvent();
 	// 해당 fd의 클라이언트를 찾는다
 	Client *client = searchClient(fd);
+	// t_send_event에 fd를 넣는다
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(fd);
+	_setSendEvent(false, false, false, true, fds);
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
 	client->addWrite_buffer("PING :" SERVERURL);
 	return (send_msg);
@@ -125,6 +127,7 @@ t_send_event Irc::ping(int fd)
 
 t_send_event Irc::quit(int fd, const char *msg)
 {
+	_clearSendEvent();
 	// 해당 fd의 클라이언트를 찾는다
 	Client *client = searchClient(fd);
 	std::vector<int> fds;
@@ -138,12 +141,14 @@ t_send_event Irc::quit(int fd, const char *msg)
 	// 해당 유저들의 fd를 t_send_event에 넣는다
 			if ((*cl_it)->getFd() != fd)
 			{
-				fds.push_back((*cl_it)->getFd());
+				if ((*cl_it)->isAlive())
+					fds.push_back((*cl_it)->getFd());
 				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "QUIT :Quit: " + msg);
 			}
 	}
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
 	_setSendEvent(true, false, true, true, fds);
+	client->setLife(false);
 	return (send_msg);
 }
 
@@ -228,13 +233,13 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 	else if (__isCommand(recv_msg.command)) // RPL_451_err_notregistered
 	{
 		std::vector<int> fds(client->getFd());
-		_setSendEvent(true, false, false, true, fds);
+		_setSendEvent(false, false, false, true, fds);
 		client->addWrite_buffer(_451_err_notregistered(SERVERURL, client->getNickname()));
 	}
 	if (client->isRegistered()) // RPL_001_rpl_welcome
 	{
 		std::vector<int> fds(client->getFd());
-		_setSendEvent(true, true, false, true, fds);
+		_setSendEvent(false, true, false, true, fds);
 		client->addWrite_buffer(_001_rpl_welcome(SERVERURL, client->getNickname(), client->makeClientPrefix()));
 	}
 	return (SUCCESS);
@@ -291,6 +296,8 @@ bool Irc::__isCommand(std::string cmd)
 
 int Irc::_command_executor(Client *client, IRCMessage recv_msg)
 {
+	if (!client->isAlive())
+		return (false);
 	if (recv_msg.command == "USER")
 		__cmd_user(client, recv_msg);
 	else if (recv_msg.command == "PASS")
@@ -329,8 +336,10 @@ int Irc::_command_executor(Client *client, IRCMessage recv_msg)
 int Irc::__cmd_user(Client *client, IRCMessage message)
 {
 	std::vector<int> fds;
-	fds.push_back(client->getFd());
+	if (client->isAlive())
+		fds.push_back(client->getFd());
 	_setSendEvent(false, false, false, true, fds);
+
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else // RPL_462_err_alreadyregisterd
@@ -341,8 +350,10 @@ int Irc::__cmd_user(Client *client, IRCMessage message)
 int Irc::__cmd_pass(Client *client, IRCMessage message)
 {
 	std::vector<int> fds;
-	fds.push_back(client->getFd());
+	if (client->isAlive())
+		fds.push_back(client->getFd());
 	_setSendEvent(false, false, false, true, fds);
+
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else // RPL_462_err_alreadyregisterd
@@ -353,9 +364,10 @@ int Irc::__cmd_pass(Client *client, IRCMessage message)
 int Irc::__cmd_nick(Client *client, IRCMessage message)
 {
 	std::vector<int> fds;
-	fds.push_back(client->getFd());
+	if (client->isAlive())
+		fds.push_back(client->getFd());
 	_setSendEvent(false, false, false, true, fds);
-	fds.clear();
+
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else if (_isNickInUse(client, message.parameters[0])) // RPL_433_err_nicknameinuse
@@ -365,14 +377,28 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 	else
 	{
 		// 동작 timestamp
-		_setSendEvent(true, true, false, true, fds);
-		// 자기 자신에게 전송
+		client->setNickname(message.parameters[0]);
 		// client가 소속된 channel의 모든 유저에게 전송
 		// current client의 channel size만큼 반복
-		// 해당 channel의 send_msg 제작
-		// channel은 user size만큼 반복
-		// 각 클라이언트의 fd를 저장
-		// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+		std::vector<Channel *> &channels = client->getChannels();
+		for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+		{
+			// 해당 channel의 send_msg 제작
+			// channel은 user size만큼 반복
+			Channel *curr_ch = *it;
+			std::vector<Client *>client_list = curr_ch->getUsers();
+			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+				if ((*cl_it)->getFd() != client->getFd())
+				{
+					// 각 클라이언트의 fd를 저장
+					// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+					if ((*cl_it)->isAlive())
+						fds.push_back((*cl_it)->getFd());
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "NICK " + message.parameters[0]);
+				}
+		}
+		// 해당 유저들의 fd를 t_send_event에 넣는다
+		_setSendEvent(true, true, false, true, fds);
 	}
 	return (SUCCESS);
 }
