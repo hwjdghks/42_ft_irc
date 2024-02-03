@@ -45,7 +45,7 @@ enum {
 };
 
 enum {
-	TITLE, OP, KEY, LIMIT, INVITE
+	TITLE, KEY, LIMIT, INVITE
 };
 
 typedef struct s_send_event

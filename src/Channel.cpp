@@ -3,7 +3,6 @@
 
 Channel::Channel(void) {
 	option[TITLE] = false;
-	option[OP] = false;
 	option[KEY] = false;
 	option[LIMIT] = false;
 	option[INVITE] = false;
@@ -27,7 +26,6 @@ Channel &Channel::operator=(const Channel &ref)
 	if (this == &ref)
 		return *this;
 	this->option[TITLE] = ref.option[TITLE];
-	this->option[OP] = ref.option[OP];
 	this->option[KEY] = ref.option[KEY];
 	this->option[LIMIT] = ref.option[LIMIT];
 	this->option[INVITE] = ref.option[INVITE];
@@ -40,6 +38,47 @@ Channel &Channel::operator=(const Channel &ref)
 	this->invited = ref.invited;
 	return *this;
 }
+
+void Channel::setOptionTitle(bool title)
+{
+	this->option[TITLE] = title;
+}
+
+void Channel::setOptionkey(bool key)
+{
+	this->option[KEY] = key;
+}
+
+void Channel::setOptionLimit(bool limit)
+{
+	this->option[LIMIT] = limit;
+}
+
+void Channel::setOptionInvite(bool invite)
+{
+	this->option[INVITE] = invite;
+}
+
+bool Channel::getOptionTitle(void)
+{
+	return (option[TITLE]);
+}
+
+bool Channel::getOptionkey(void)
+{
+	return (option[KEY]);
+}
+
+bool Channel::getOptionLimit(void)
+{
+	return (option[LIMIT]);
+}
+
+bool Channel::getOptionInvite(void)
+{
+	return (option[INVITE]);
+}
+
 
 std::vector<Client *> &Channel::getOperators(void)
 {

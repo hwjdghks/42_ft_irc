@@ -7,7 +7,7 @@
 class Channel
 {
 private:
-	bool						option[5];
+	bool						option[4];
 	int							limit;
 	Client						bot;
 	std::string					password;
@@ -22,6 +22,16 @@ public:
 	~Channel();
 
 	Channel &operator=(const Channel &ref);
+
+	void setOptionTitle(bool);
+	void setOptionkey(bool);
+	void setOptionLimit(bool);
+	void setOptionInvite(bool);
+
+	bool getOptionTitle(void);
+	bool getOptionkey(void);
+	bool getOptionLimit(void);
+	bool getOptionInvite(void);
 
 	void setPassword(std::string);
 	void setTopic(std::string);
