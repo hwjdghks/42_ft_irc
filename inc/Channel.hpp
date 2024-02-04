@@ -7,15 +7,15 @@
 class Channel
 {
 private:
-	bool						option[4];
-	int							limit;
-	Client						bot;
-	std::string					password;
-	std::string					topic;
-	std::string					name;
-	std::vector<Client *>		operators;
-	std::vector<Client *>		users;
-	std::vector<std::string>	invited;
+	bool					option[4];
+	int						limit;
+	Client					bot;
+	std::string				password;
+	std::string				topic;
+	std::string				name;
+	std::vector<Client *>	operators;
+	std::vector<Client *>	users;
+	std::vector<Client *>	invited;
 public:
 	Channel();
 	Channel(const Channel &ref);
@@ -33,18 +33,19 @@ public:
 	bool getOptionLimit(void);
 	bool getOptionInvite(void);
 
+	std::vector<Client *> &getOperators(void);
+	std::vector<Client *> &getUsers(void);
+
 	void setPassword(std::string);
 	void setTopic(std::string);
 	void setName(std::string);
 	std::string getPassword(void);
 	std::string getTopic(void);
 	std::string getName(void);
-	std::vector<Client *> &getOperators(void);
-	std::vector<Client *> &getUsers(void);
 
-	int addInvite(std::string);
-	int isInvite(std::string);
-	int delInvite(std::string);
+	bool addInvite(Client &client);
+	bool isInvite(const std::string &nickname);
+	void delInvite(const std::string &nickname);
 
 	bool addOperator(Client &client);
 	bool isOperator(const std::string &nickname) const;

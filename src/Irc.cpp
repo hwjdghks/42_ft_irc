@@ -137,7 +137,7 @@ t_send_event Irc::quit(int fd, const char *msg)
 	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
 		Channel *curr_ch = *it;
-		std::vector<Client *>client_list = curr_ch->getUsers();
+		std::vector<Client *> client_list = curr_ch->getUsers();
 		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 	// 해당 유저들의 fd를 t_send_event에 넣는다
 			if ((*cl_it)->getFd() != fd)
@@ -387,7 +387,7 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 			// 해당 channel의 send_msg 제작
 			// channel은 user size만큼 반복
 			Channel *curr_ch = *it;
-			std::vector<Client *>client_list = curr_ch->getUsers();
+			std::vector<Client *> client_list = curr_ch->getUsers();
 			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			{
 				// 각 클라이언트의 fd를 저장
@@ -462,7 +462,7 @@ int Irc::__cmd_list(Client *client, IRCMessage message)
 		int cnt;
 
 		cnt = 0;
-		std::vector<Client *>client_list = curr_ch->getUsers();
+		std::vector<Client *> client_list = curr_ch->getUsers();
 		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			cnt++;
 		std::stringstream ss;
@@ -495,7 +495,7 @@ int Irc::__cmd_who(Client *client, IRCMessage message)
 		for (iter = channels.begin(); iter != channels.end() ; iter++)
 			if (iter->getName() == message.parameters[0])
 				break ;
-		std::vector<Client *>client_list = iter->getUsers();
+		std::vector<Client *> client_list = iter->getUsers();
 		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 		{
 			// RPL_352_rpl_whoreply
@@ -521,7 +521,7 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
 		Channel *curr_ch = *it;
-		std::vector<Client *>client_list = curr_ch->getUsers();
+		std::vector<Client *> client_list = curr_ch->getUsers();
 		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 	// 해당 유저들의 fd를 t_send_event에 넣는다
 			if ((*cl_it)->getFd() != client->getFd())
@@ -627,25 +627,72 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 
 int Irc::__cmd_topic(Client *client, IRCMessage message)
 {
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
+	_setSendEvent(true, false, false, true, fds);
+
 	if (message.parameters.size() == 0) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else if (message.parameters.size() == 1)
-		if (채널 이름일수가 없음)
-			// RPL 476
-		else if (채널 탐색 실패)
-			// RPL 403
-		else if (topic != NULL)
-			// RPL 332
+	{
+		if (!__isValidChannelName(message.parameters[0]))
+			client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
+		else if (!isExistingChannel(message.parameters[0]))
+			client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 		else
-			// RPL 331
+		{
+			std::vector<Channel>::iterator iter;
+			for (iter = channels.begin(); iter != channels.end() ; iter++)
+				if (iter->getName() == message.parameters[0])
+					break ;
+			std::string topic = iter->getTopic();
+			if (topic.empty())
+				// RPL 331
+				client->addWrite_buffer(_331_rpl_notopic(SERVERURL, client->getNickname(), message.parameters[0]));
+			else
+				// RPL 332
+				client->addWrite_buffer(_332_rpl_topic(SERVERURL, client->getNickname(), message.parameters[0], topic));
+			_setSendEvent(true, true, false, true, fds);
+		}
+	}
 	else
-		if (채널 탐색 실패)
-			// RPL 403
-		else if (client가 channel의 op가 아님)
-			// RPL 482
+	{
+		if (!__isValidChannelName(message.parameters[0]))
+			client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
+		else if (!isExistingChannel(message.parameters[0]))
+			client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 		else
-			// 동작 - timestamp
-			// 해당 channel의 모든 client에게 전송
+		{
+			std::vector<Channel>::iterator iter;
+			for (iter = channels.begin(); iter != channels.end() ; iter++)
+				if (iter->getName() == message.parameters[0])
+					break ;
+			if (iter->isOperator(client->getNickname()))
+				// RPL 482
+				client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[0]));
+			else
+			{
+				// 동작 - timestamp
+				std::vector<std::string>::iterator param_iter = message.parameters.begin();
+				std::string msg = *param_iter;
+				param_iter++;
+				for (; param_iter != message.parameters.end() ; param_iter++)
+				{
+					msg = msg + " " + *param_iter;
+				}
+				// 해당 channel의 모든 client에게 전송
+				std::vector<Client *> client_list = iter->getUsers();
+				for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+				{
+					if ((*cl_it)->isAlive())
+						fds.push_back((*cl_it)->getFd());
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "TOPIC " + iter->getName() + " " + msg);
+				}
+				_setSendEvent(true, true, false, true, fds);
+			}
+		}
+	}
 	return (SUCCESS);
 }
 

@@ -90,6 +90,64 @@ std::vector<Client *> &Channel::getUsers(void)
 	return this->users;
 }
 
+void Channel::setPassword(std::string password)
+{
+	this->password = password;
+}
+
+void Channel::setTopic(std::string topic)
+{
+	this->topic = topic;
+}
+
+void Channel::setName(std::string name)
+{
+	this->name = name;
+}
+
+std::string Channel::getPassword(void)
+{
+	return password;
+}
+
+std::string Channel::getTopic(void)
+{
+	return topic;
+}
+
+std::string Channel::getName(void)
+{
+	return name;
+}
+
+bool Channel::addInvite(Client &client)
+{
+	if (isInvite(client.getNickname()))
+		return false;
+	invited.push_back(&client);
+	return true;
+}
+
+bool Channel::isInvite(const std::string &nickname)
+{
+	for (std::vector<Client *>::const_iterator it = invited.begin(); it != invited.end(); it++)
+		if ((*it)->getNickname() == nickname)
+			return true;
+	return false;
+}
+
+void Channel::delInvite(const std::string &nickname)
+{
+	for (std::vector<Client *>::iterator it = invited.begin(); it != invited.end(); it++)
+	{
+		if ((*it)->getNickname() == nickname)
+		{
+			invited.erase(it);
+			break ;
+		}
+	}
+}
+
 bool Channel::addOperator(Client &client)
 {
 	if (isOperator(client.getNickname()))
