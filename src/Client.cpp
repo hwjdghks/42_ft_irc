@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include "Channel.hpp"
 #include <iostream>
 
 Client::Client(void) : fd(0), bot(false), life(true)
@@ -197,4 +198,32 @@ void Client::rollbackBuf(std::string buf, ssize_t len)
 bool Client::isMaxJoin(void)
 {
 	return (MAX_CHANNEL == this->channels.size());
+}
+
+bool Client::addChannel(Channel &channel)
+{
+	if (isChannel(channel.getName()))
+		return false;
+	channels.push_back(&channel);
+	return true;
+}
+
+bool Client::isChannel(const std::string &name) const
+{
+	for (std::vector<Channel *>::const_iterator it = channels.begin(); it != channels.end(); it++)
+		if ((*it)->getName() == name)
+			return true;
+	return false;
+}
+
+void Client::delChannel(const std::string &name)
+{
+	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+	{
+		if ((*it)->getName() == name)
+		{
+			channels.erase(it);
+			break ;
+		}
+	}
 }

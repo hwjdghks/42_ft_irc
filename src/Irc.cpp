@@ -634,60 +634,47 @@ int Irc::__cmd_topic(Client *client, IRCMessage message)
 
 	if (message.parameters.size() == 0) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else if (message.parameters.size() == 1)
+	else if (!__isValidChannelName(message.parameters[0]))
+		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
+	else if (!isExistingChannel(message.parameters[0]))
+		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
+	else
 	{
-		if (!__isValidChannelName(message.parameters[0]))
-			client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
-		else if (!isExistingChannel(message.parameters[0]))
-			client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
-		else
-		{
-			std::vector<Channel>::iterator iter;
+		std::vector<Channel>::iterator iter;
 			for (iter = channels.begin(); iter != channels.end() ; iter++)
 				if (iter->getName() == message.parameters[0])
 					break ;
+		if (message.parameters.size() == 1)
+		{
 			std::string topic = iter->getTopic();
-			if (topic.empty())
-				// RPL 331
+			if (topic.empty()) // RPL 331
 				client->addWrite_buffer(_331_rpl_notopic(SERVERURL, client->getNickname(), message.parameters[0]));
-			else
-				// RPL 332
+			else // RPL 332
 				client->addWrite_buffer(_332_rpl_topic(SERVERURL, client->getNickname(), message.parameters[0], topic));
 			_setSendEvent(true, true, false, true, fds);
 		}
-	}
-	else
-	{
-		if (!__isValidChannelName(message.parameters[0]))
-			client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
-		else if (!isExistingChannel(message.parameters[0]))
-			client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 		else
 		{
-			std::vector<Channel>::iterator iter;
-			for (iter = channels.begin(); iter != channels.end() ; iter++)
-				if (iter->getName() == message.parameters[0])
-					break ;
-			if (iter->isOperator(client->getNickname()))
-				// RPL 482
+			if (!iter->isOperator(client->getNickname())) // RPL 482
 				client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[0]));
 			else
 			{
 				// 동작 - timestamp
 				std::vector<std::string>::iterator param_iter = message.parameters.begin();
-				std::string msg = *param_iter;
+				std::string topic = *param_iter;
 				param_iter++;
 				for (; param_iter != message.parameters.end() ; param_iter++)
 				{
-					msg = msg + " " + *param_iter;
+					topic = topic + " " + *param_iter;
 				}
+				iter->setTopic(topic);
 				// 해당 channel의 모든 client에게 전송
 				std::vector<Client *> client_list = iter->getUsers();
 				for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 				{
 					if ((*cl_it)->isAlive())
 						fds.push_back((*cl_it)->getFd());
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "TOPIC " + iter->getName() + " " + msg);
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "TOPIC " + iter->getName() + " " + topic);
 				}
 				_setSendEvent(true, true, false, true, fds);
 			}
@@ -698,22 +685,59 @@ int Irc::__cmd_topic(Client *client, IRCMessage message)
 
 int Irc::__cmd_kick(Client *client, IRCMessage message)
 {
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
+	_setSendEvent(true, false, false, true, fds);
+
 	if (message.parameters.size() == 0) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else if (채널 이름일수가 없음)
-		// RPL 476
-	else if (채널 탐색 실패)
-		// RPL 403
-	else if (해당 클라이언트는 채널의 멤버가 아님)
-		// RPL 442
-	else if (nick을 가진 클라이언트가 없음)
-		// RPL 401
-	else if (client는 해당 채널의 op가 아님)
-		// RPL 482
+	else if (!__isValidChannelName(message.parameters[0])) // RPL 476
+		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
+	else if (!isExistingChannel(message.parameters[0])) // RPL 403
+		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
-		// 동작 - timestamp
-		// 해당 channel의 모든 유저에게 전송
-		// 해당 유저를 channel에서 제거
+	{
+		std::vector<Channel>::iterator iter;
+		for (iter = channels.begin(); iter != channels.end() ; iter++)
+			if (iter->getName() == message.parameters[0])
+				break ;
+		if (!iter->isUser(client->getNickname())) // RPL 442
+			client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), message.parameters[0]));
+		else if (!iter->isUser(message.parameters[1])) // RPL 401
+			client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), message.parameters[1]));
+		else if (!iter->isOperator(client->getNickname())) // RPL 482
+			client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[0]));
+		else
+		{
+			Client *tmp_client;
+			std::vector<std::string>::iterator param_iter = message.parameters.begin();
+			param_iter++;
+			param_iter++;
+			std::string msg = *param_iter;
+			for (; param_iter != message.parameters.end() ; param_iter++)
+			{
+				msg = msg + " " + *param_iter;
+			}
+			// 동작 - timestamp
+			// 해당 channel의 모든 유저에게 전송
+			std::vector<Client *> client_list = iter->getUsers();
+			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+			{
+				if ((*cl_it)->getNickname() == message.parameters[1])
+					tmp_client = *cl_it;
+				if ((*cl_it)->isAlive())
+					fds.push_back((*cl_it)->getFd());
+				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "KICK " + iter->getName() + " " + msg);
+			}
+			_setSendEvent(true, true, false, true, fds);
+			// 해당 유저를 channel에서 제거
+			iter->delOperator(message.parameters[1]);
+			iter->delUser(message.parameters[1]);
+			// 해당 유저에서 channel을 제거
+			tmp_client->delChannel(message.parameters[0]);
+		}
+	}
 	return (SUCCESS);
 }
 
