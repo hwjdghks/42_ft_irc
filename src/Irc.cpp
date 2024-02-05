@@ -144,7 +144,7 @@ t_send_event Irc::quit(int fd, const char *msg)
 			{
 				if ((*cl_it)->isAlive())
 					fds.push_back((*cl_it)->getFd());
-				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "QUIT :Quit: " + msg);
+				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " QUIT :Quit: " + msg);
 			}
 	}
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
@@ -409,7 +409,7 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 				// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
 				if ((*cl_it)->isAlive())
 					fds.push_back((*cl_it)->getFd());
-				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "NICK " + message.parameters[0]);
+				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0]);
 			}
 		}
 		// 해당 유저들의 fd를 t_send_event에 넣는다
@@ -433,11 +433,11 @@ int	Irc::__cmd_ping(Client *client, IRCMessage message)
 		_setSendEvent(true, true, false, true, fds);
 		if (message.parameters.size() == 1)
 			// 동작
-			client->addWrite_buffer(client->makeClientPrefix() + "PONG " + SERVERNAME + " :" + message.parameters[0]);
+			client->addWrite_buffer(client->makeClientPrefix() + " PONG " + SERVERNAME + " :" + message.parameters[0]);
 			// :prifix PONG server :message.parameters
 		else
 			// 동작
-			client->addWrite_buffer(client->makeClientPrefix() + "PONG " + message.parameters[1] + " :" + message.parameters[0]);
+			client->addWrite_buffer(client->makeClientPrefix() + " PONG " + message.parameters[1] + " :" + message.parameters[0]);
 			// :prifix PONG message.parameters[1] :message.parameters[0]
 	}
 	return (SUCCESS);
@@ -544,7 +544,7 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 				if ((*cl_it)->isAlive())
 					fds.push_back((*cl_it)->getFd());
 				if (message.parameters.size() == 0)
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "QUIT :Quit: " + QUITMSG);
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " QUIT :Quit: " + QUITMSG);
 				else
 				{
 					std::vector<std::string>::iterator iter = message.parameters.begin();
@@ -554,7 +554,7 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 					{
 						msg = msg + " " + *iter;
 					}
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "QUIT :Quit: " + msg);
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " QUIT :Quit: " + msg);
 				}
 			}
 	}
@@ -563,7 +563,7 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 	client->setLife(false);
 	return (SUCCESS);
 }
-
+// 사실상 서버 자체 봇 설계가 여기 들어가게됨
 int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 {
 	if (message.parameters.size() < 2) // RPL 461
@@ -588,10 +588,10 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 				else
 					// 동작
 					if (메세지 내용이 ":/BOTNAME COMMAND")
-						// bot 동작시키기
+						// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
 	return (SUCCESS);
 }
-
+// join이 사실상 가장 마지막에 제작될 명령어임
 int Irc::__cmd_join(Client *client, IRCMessage message)
 {
 	std::vector<int> fds;
@@ -668,7 +668,7 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 						// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
 						if ((*cl_it)->isAlive())
 							fds.push_back((*cl_it)->getFd());
-						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "PART " + *chan_iter + " :" + msg);
+						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " PART " + *chan_iter + " :" + msg);
 					}
 					// 채널에서 삭제
 				}
@@ -729,7 +729,7 @@ int Irc::__cmd_topic(Client *client, IRCMessage message)
 				{
 					if ((*cl_it)->isAlive())
 						fds.push_back((*cl_it)->getFd());
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "TOPIC " + iter->getName() + " :" + topic);
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " TOPIC " + iter->getName() + " :" + topic);
 				}
 				_setSendEvent(true, true, false, true, fds);
 			}
@@ -783,7 +783,7 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 					tmp_client = *cl_it;
 				if ((*cl_it)->isAlive())
 					fds.push_back((*cl_it)->getFd());
-				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "KICK " + iter->getName() + " :" + msg);
+				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " KICK " + iter->getName() + " :" + msg);
 			}
 			_setSendEvent(true, true, false, true, fds);
 			// 해당 유저를 channel에서 제거
@@ -836,7 +836,7 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 			Client *tmp_client = searchClient(message.parameters[1]);
 			if ((tmp_client)->isAlive())
 				fds.push_back((tmp_client)->getFd());
-			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + "INVITE " + tmp_client->getNickname() + " :" + message.parameters[0]);
+			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + " INVITE " + tmp_client->getNickname() + " :" + message.parameters[0]);
 			// 해당 유저를 channel invited에 추가
 			iter->addInvite(tmp_client);
 			_setSendEvent(true, true, false, true, fds);
@@ -856,40 +856,49 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 
 	if (message.parameters.size() == 0) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else if (message.parameters.size() == 1)
+	else
 	{
-		if (채널 이름일수가 없음)
-			// RPL 476
+		if (!__isValidChannelName(message.parameters[0])) // RPL 476
+			client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
+		else if (!isExistingChannel(message.parameters[0])) // RPL 403
+			client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 		else
 		{
 			// 채널 탐색 및 값 가져오기
-			std::string channelMode;
-			std::string channelModeParam;
-			if (채널 탐색 실패) // RPL 403
-				client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), channelName));
-			else // RPL 324
-				client->addWrite_buffer(_324_rpl_channelmodeis(SERVERURL, client->getNickname(), channel->getName(), channelMode, channelModeParam));
+			Channel *chan = searchChannel(message.parameters[0]);
+			std::string channelMode = chan->getMode();
+			std::string channelModeParam = chan->getModeParam();
+			if (message.parameters.size() == 1)
+			{
+				client->addWrite_buffer(_324_rpl_channelmodeis(SERVERURL, client->getNickname(), chan->getName(), channelMode, channelModeParam));
+			}
+			else
+			{
+				if (!chan->isUser(client->getNickname())) // RPL 442
+					client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), message.parameters[0]));
+				else if (!chan->isOperator(client->getNickname())) // RPL 482
+					client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[0]));
+				else
+				{
+					// 여기서 루프 타는거 어때??
+					// mode param은 param index 2부터 시작하고 param 관련 옵션이라 호출할때만 +
+					// TITLE, KEY, LIMIT, INVITE + op 다섯가지는 어차피 문자로 들어오는거니 switch도 가능
+					// 그럼 default가 _472_err_unknownmode
+					// 그리고 실행 가능한데 param 못 꺼내오면 (end() 일 때) _696_err_invalidmodeparam
+					// 각 경우 마지막에 성공한다면 channel에게 아니면 본인에게인거니까 ㅇㅇ
+					if (모르는 char가 들어온 경우) // RPL 472 경우마다지만 한개만 보내 보기
+						client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), message.parameters[2]));
+					else if (o k l 의 param이 부족한 경우) // RPL 696 경우마다지만 한개만 보내 보기
+						client->addWrite_buffer(_696_err_invalidmodeparam(SERVERURL, client->getNickname(), message.parameters[2]));
+					else if (key 이미 설정됨) // RPL 467
+						client->addWrite_buffer(_467_err_keyset(SERVERURL, client->getNickname(), channelName));
+					else
+						// 동작 - timestamp
+						_setSendEvent(true, true, false, true, fds);
+						// 해당 channel의 모든 유저에게 전송
+				}
+			}
 		}
-	}
-	else if (채널 이름일수가 없음) // RPL 476
-		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), channelName));
-	else
-	{
-		if (채널 탐색 실패)
-			// RPL 403
-		else if (client는 해당 채널의 op가 아님)
-			// RPL 482
-		else if (모르는 char가 들어온 경우) // RPL 472 경우마다지만 한개만 보내 보기
-			client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), modes));
-		else if (o k l 의 param이 부족한 경우) // RPL 696 경우마다지만 한개만 보내 보기
-			client->addWrite_buffer(_696_err_invalidmodeparam(SERVERURL, client->getNickname(), channelName));
-		else if (key 이미 설정됨) // RPL 467
-			client->addWrite_buffer(_467_err_keyset(SERVERURL, client->getNickname(), channelName));
-		else
-			// 동작 - timestamp
-			_setSendEvent(true, true, false, true, fds);
-			// 해당 channel의 모든 유저에게 전송
-			
 	}
 	return (SUCCESS);
 }
