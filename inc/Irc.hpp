@@ -37,6 +37,7 @@ private:
 	int _addBot();
 	int	_setSendEvent(bool, bool, bool, bool, std::vector<int>);
 	int	_clearSendEvent();
+	Channel *searchChannel(const std::string &channelname);
 private:
 	IRCMessage parseMessage(const char message[]);
 	int _register_executor(Client *client, IRCMessage recv_msg);

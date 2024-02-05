@@ -223,6 +223,21 @@ int	Irc::_clearSendEvent()
 	return (SUCCESS);
 }
 
+Channel *Irc::searchChannel(const std::string &channelname)
+{
+	Channel *channel = NULL;
+	// Channel vector를 순회하여 fd에 해당하는 클라이언트 가져오기
+	for(std::vector<Channel>::iterator it = channels.begin(); it != channels.end(); it++)
+	{
+		if (it->getName() == channelname)
+		{
+			channel = &(*it);
+			break ;
+		}
+	}
+	return (channel);
+}
+
 int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 {
 	if (recv_msg.command == "USER")
@@ -579,9 +594,15 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 
 int Irc::__cmd_join(Client *client, IRCMessage message)
 {
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
+	_setSendEvent(true, false, true, true, fds);
+
 	if (message.parameters.size() < 2) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else
+	{
 		// 첫번째 파라미터를 ','를 기준으로 분리
 		// loop
 			if (채널 이름일수가 없음)
@@ -601,27 +622,61 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 			else if (존재하지 않는 채널)
 				// 채널 생성
 				// op로서 가입
+	}
 	return (SUCCESS);
 }
 
 int Irc::__cmd_part(Client *client, IRCMessage message)
 {
-	if (message.parameters.size() < 2)
-		// RPL 461
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
+	_setSendEvent(true, false, true, true, fds);
+
+	if (message.parameters.size() < 2) // RPL 461
+		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else
-		// 첫번째 파라미터를 ','를 기준으로 분리
+	{
+		std::vector<std::string> targets;
+		// 첫번째 파라미터를 ','를 기준으로 분리하여 vector에 넣기
+		{}
 		// loop
-			if (채널 이름일수가 없음)
-				// RPL 476
-			else if (채널 탐색 실패)
-				// RPL 403
-			else if (채널 탐색 성공)
-				if (가입중)
-					// 동작
+		std::vector<std::string>::iterator chan_iter;
+		for (chan_iter = targets.begin() ; chan_iter != targets.end() ; chan_iter++)
+		{
+			if (!__isValidChannelName(*chan_iter)) // RPL 476
+				client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), *chan_iter));
+			else if (!isExistingChannel(*chan_iter)) // RPL 403
+				client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), *chan_iter));
+			else
+			{
+				if (client->isChannel(*chan_iter))
+				{
+					// 동작 - message 제작
+					std::vector<std::string>::iterator param_iter = message.parameters.begin();
+					std::string msg = *param_iter;
+					param_iter++;
+					for (; param_iter != message.parameters.end() ; param_iter++)
+						msg = msg + " " + *param_iter;
+					// 동작 - channel 찾아오기
+					Channel *chan = searchChannel(*chan_iter);
 					// 채절의 모든 유저에게 나간다고 알림
+					std::vector<Client *> client_list = chan->getUsers();
+					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+					{
+						// 각 클라이언트의 fd를 저장
+						// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+						if ((*cl_it)->isAlive())
+							fds.push_back((*cl_it)->getFd());
+						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "PART " + *chan_iter + " :" + msg);
+					}
 					// 채널에서 삭제
-				else
-					// RPL
+				}
+				else // RPL
+					client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), *chan_iter));
+			}
+		}
+	}
 	return (SUCCESS);
 }
 
@@ -674,7 +729,7 @@ int Irc::__cmd_topic(Client *client, IRCMessage message)
 				{
 					if ((*cl_it)->isAlive())
 						fds.push_back((*cl_it)->getFd());
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "TOPIC " + iter->getName() + " " + topic);
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "TOPIC " + iter->getName() + " :" + topic);
 				}
 				_setSendEvent(true, true, false, true, fds);
 			}
@@ -690,7 +745,7 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 		fds.push_back(client->getFd());
 	_setSendEvent(true, false, false, true, fds);
 
-	if (message.parameters.size() == 0) // RPL 461
+	if (message.parameters.size() < 2) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else if (!__isValidChannelName(message.parameters[0])) // RPL 476
 		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
@@ -728,7 +783,7 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 					tmp_client = *cl_it;
 				if ((*cl_it)->isAlive())
 					fds.push_back((*cl_it)->getFd());
-				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "KICK " + iter->getName() + " " + msg);
+				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + "KICK " + iter->getName() + " :" + msg);
 			}
 			_setSendEvent(true, true, false, true, fds);
 			// 해당 유저를 channel에서 제거
@@ -743,31 +798,61 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 
 int Irc::__cmd_invite(Client *client, IRCMessage message)
 {
-	if (message.parameters.size() == 0) // RPL 461
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
+	_setSendEvent(true, false, false, true, fds);
+
+	if (message.parameters.size() < 2) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else if (채널 이름일수가 없음)
-		// RPL 476
-	else if (채널 탐색 실패)
-		// RPL 403
-	else if (해당 클라이언트는 채널의 멤버가 아님)
-		// RPL 442
-	else if (nick을 가진 클라이언트가 없음)
-		// RPL 401
-	else if (client는 해당 채널의 op가 아님)
-		// RPL 482
+	else if (!__isValidChannelName(message.parameters[0])) // RPL 476
+		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
+	else if (!isExistingChannel(message.parameters[0])) // RPL 403
+		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
-		// 동작 - timestamp
-		// 해당 channel의 모든 유저에게 전송
-		// 해당 유저를 channel에서 제거
+	{
+		std::vector<Channel>::iterator iter;
+		for (iter = channels.begin(); iter != channels.end() ; iter++)
+			if (iter->getName() == message.parameters[0])
+				break ;
+		if (!iter->isUser(client->getNickname())) // RPL 442
+			client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), message.parameters[0]));
+		else if (!iter->isUser(message.parameters[1])) // RPL 401
+			client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), message.parameters[1]));
+		else if (!iter->isOperator(client->getNickname())) // RPL 482
+			client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[0]));
+		else
+		{
+			// 동작 - timestamp
+			// 해당 channel의 모든 유저에게 전송
+			std::vector<Client *> client_list = iter->getUsers();
+			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+			{
+				if ((*cl_it)->isAlive())
+					fds.push_back((*cl_it)->getFd());
+				(*cl_it)->addWrite_buffer(_341_rpl_inviting(SERVERURL, client->getNickname(), iter->getName(), message.parameters[1]));
+			}
+			// 해당 유저를 channel invited에 추가
+			// 해당 유저에게 초대 메세지 보내기
+			Client *tmp_client = searchClient(message.parameters[1]);
+			if ((tmp_client)->isAlive())
+				fds.push_back((tmp_client)->getFd());
+			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + "INVITE " + tmp_client->getNickname() + " :" + message.parameters[0]);
+			_setSendEvent(true, true, false, true, fds);
+		}
+	}
 	return (SUCCESS);
 }
+// 초대받은 유저 :kiryud!jeongjinse@127.0.0.1 INVITE nick :#qwer
+// 채널 소속 유저 :penguin.omega.example.org 341 kiryud nick :#qwer
 
 int Irc::__cmd_mode(Client *client, IRCMessage message)
 {
-	std::string channelName = message.parameters[0];
-	Channel *channel;
-	std::vector<int> fds(client->getFd());
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
 	_setSendEvent(true, false, false, true, fds);
+
 	if (message.parameters.size() == 0) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else if (message.parameters.size() == 1)
