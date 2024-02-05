@@ -531,7 +531,7 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 	std::vector<int> fds;
 	if (client->isAlive())
 		fds.push_back(client->getFd());
-	_setSendEvent(true, false, true, true, fds);
+	_setSendEvent(true, false, false, true, fds);
 	std::vector<Channel *> &channels = client->getChannels();
 	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
@@ -591,37 +591,50 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 						// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
 	return (SUCCESS);
 }
-// join이 사실상 가장 마지막에 제작될 명령어임
+
 int Irc::__cmd_join(Client *client, IRCMessage message)
 {
 	std::vector<int> fds;
 	if (client->isAlive())
 		fds.push_back(client->getFd());
-	_setSendEvent(true, false, true, true, fds);
+	_setSendEvent(true, false, false, true, fds);
 
 	if (message.parameters.size() < 2) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else
 	{
-		// 첫번째 파라미터를 ','를 기준으로 분리
+		std::vector<std::string> targets;
+		// 첫번째 파라미터를 ','를 기준으로 분리하여 vector에 넣기
+		{}
 		// loop
-			if (채널 이름일수가 없음)
-				// RPL 476
-			else if (채널 탐색 실패)
-				// RPL 403
-			else if (+i 초대 못받음)
-				// RPL 473
-			else if (+k 초대 못받음)
-				// RPL 475
-			else if (+l 초대 못받음)
-				// RPL 471
-			else if (client가 channel 가입 상한 초과)
-				// RPL 405
-			else if (존재하는 채널)
-				// 일반 유저로 가입
-			else if (존재하지 않는 채널)
+		std::vector<std::string>::iterator chan_iter;
+		for (chan_iter = targets.begin() ; chan_iter != targets.end() ; chan_iter++)
+		{
+			if (!__isValidChannelName(message.parameters[0]))
+				client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
+			else if (!isExistingChannel(message.parameters[0]))
+			{
+				// 존재하지 않는 채널
 				// 채널 생성
 				// op로서 가입
+				_setSendEvent(true, true, false, true, fds);
+			}
+			else
+			{
+				// 채널 탐색 및 값 가져오기
+				Channel *chan = searchChannel(message.parameters[0]);
+				if (client->isMaxJoin())
+					// RPL 405
+				else if (chan->getOptionInvite() && !chan->isInvite(client->getNickname()))
+					// RPL 473
+				else if (chan->getOptionkey() && (message.parameters.size() == 1 || !chan->isKey(message.parameters[1])))
+					// RPL 475
+				else if (chan->getOptionLimit() && chan->isFull())
+					// RPL 471
+				else
+					// 일반 유저로 가입
+			}
+		}
 	}
 	return (SUCCESS);
 }
