@@ -120,11 +120,11 @@ std::string Channel::getName(void)
 	return name;
 }
 
-bool Channel::addInvite(Client &client)
+bool Channel::addInvite(Client *client)
 {
-	if (isInvite(client.getNickname()))
+	if (isInvite(client->getNickname()))
 		return false;
-	invited.push_back(&client);
+	invited.push_back(client);
 	return true;
 }
 
@@ -148,11 +148,11 @@ void Channel::delInvite(const std::string &nickname)
 	}
 }
 
-bool Channel::addOperator(Client &client)
+bool Channel::addOperator(Client *client)
 {
-	if (isOperator(client.getNickname()))
+	if (isOperator(client->getNickname()))
 		return false;
-	operators.push_back(&client);
+	operators.push_back(client);
 	return true;
 }
 
@@ -176,11 +176,11 @@ void Channel::delOperator(const std::string &nickname)
 	}
 }
 
-bool Channel::addUser(Client &client)
+bool Channel::addUser(Client *client)
 {
-	if (isUser(client.getNickname()))
+	if (isUser(client->getNickname()))
 		return false;
-	users.push_back(&client);
+	users.push_back(client);
 	return true;
 }
 

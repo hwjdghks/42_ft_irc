@@ -832,12 +832,13 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 					fds.push_back((*cl_it)->getFd());
 				(*cl_it)->addWrite_buffer(_341_rpl_inviting(SERVERURL, client->getNickname(), iter->getName(), message.parameters[1]));
 			}
-			// 해당 유저를 channel invited에 추가
 			// 해당 유저에게 초대 메세지 보내기
 			Client *tmp_client = searchClient(message.parameters[1]);
 			if ((tmp_client)->isAlive())
 				fds.push_back((tmp_client)->getFd());
 			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + "INVITE " + tmp_client->getNickname() + " :" + message.parameters[0]);
+			// 해당 유저를 channel invited에 추가
+			iter->addInvite(tmp_client);
 			_setSendEvent(true, true, false, true, fds);
 		}
 	}

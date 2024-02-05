@@ -43,15 +43,15 @@ public:
 	std::string getTopic(void);
 	std::string getName(void);
 
-	bool addInvite(Client &client);
+	bool addInvite(Client *client);
 	bool isInvite(const std::string &nickname);
 	void delInvite(const std::string &nickname);
 
-	bool addOperator(Client &client);
+	bool addOperator(Client *client);
 	bool isOperator(const std::string &nickname) const;
 	void delOperator(const std::string &nickname);
 
-	bool addUser(Client &client);
+	bool addUser(Client *client);
 	bool isUser(const std::string &nickname) const;
 	void delUser(const std::string &nickname);
 };
