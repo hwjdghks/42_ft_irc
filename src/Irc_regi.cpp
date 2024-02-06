@@ -180,7 +180,7 @@ bool Irc::isExistingChannel(std::string chName)
 }
 
 
-std::vector<std::string> Irc::__getTargets(std::string &stargets)
+std::vector<std::string> Irc::__getTargets(const std::string &stargets)
 {
 	std::vector<std::string>targets;
 	std::stringstream ss(stargets);
