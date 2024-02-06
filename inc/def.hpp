@@ -38,7 +38,7 @@ static const char *MSG_FAIL_SYSTEM = "System call error";
 
 # define HOST "localhost"
 # define SERVERNAME	"ft_irc"
-# define SERVERURL	"ft_irc.42.fr"
+# define SERVERURL	":ft_irc.42.fr"
 
 enum {
 	PASS, NICK, USER
