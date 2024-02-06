@@ -62,7 +62,8 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 		// 명령어에 따라 동작하기
 		if (!client->isRegistered())
 			_register_executor(client, recv_msg);
-		_command_executor(client, recv_msg);
+		else
+			_command_executor(client, recv_msg);
 	}
 	return (send_msg);
 }
