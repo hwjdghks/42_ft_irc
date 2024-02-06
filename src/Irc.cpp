@@ -1024,6 +1024,9 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 					// 그리고 실행 가능한데 param 못 꺼내오면 (end() 일 때) _696_err_invalidmodeparam
 					// 각 경우 마지막에 성공한다면 channel에게 아니면 본인에게인거니까 ㅇㅇ
 					std::string options = message.parameters[1];
+					std::vector<std::string>::iterator param_iter;
+					param_iter = message.parameters.begin();
+					std::advance(param_iter, 2);
 					std::string::iterator opt_iter = options.begin();
 					bool flag;
 					if (*opt_iter == '+')
@@ -1050,35 +1053,127 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 						switch (i)
 						{
 							case 0: // topic
+								if (!(flag == chan->getOptionTitle()))
+								{
+									chan->setOptionTitle(flag);
+									std::string rplmsg;
+									if (flag)
+									{
+										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " :+t" + "\n";
+									}
+									else
+									{
+										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " :-t" + "\n";
+									}
+									std::vector<Client *> client_list = chan->getUsers();
+									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+									{
+										if ((*cl_it)->isAlive())
+											fds.push_back((*cl_it)->getFd());
+										(*cl_it)->addWrite_buffer(rplmsg);
+									}
+									_setSendEvent(true, true, false, true, fds);
+								}
 								break ;
 							case 1: // key
+								if (param_iter == message.parameters.end())
+									client->addWrite_buffer(_696_err_invalidmodeparam(SERVERURL, client->getNickname(), "k"));
+								else if (!(flag == chan->getOptionkey()))
+								{
+									client->addWrite_buffer(_467_err_keyset(SERVERURL, client->getNickname(), chan->getName()));
+								}
 								break ;
 							case 2: // limit
+								if (param_iter == message.parameters.end())
+									client->addWrite_buffer(_696_err_invalidmodeparam(SERVERURL, client->getNickname(), "l"));
+								else if (!(flag == chan->getOptionLimit()))
+								{
+									double num = std::strtod((*param_iter).c_str(), NULL);
+									chan->setLimit(static_cast<size_t>(num));
+									chan->setOptionLimit(flag);
+									std::string rplmsg;
+									if (flag)
+									{
+										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +l :" + *param_iter + "\n";
+									}
+									else
+									{
+										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -l :" + *param_iter + "\n";
+									}
+									std::vector<Client *> client_list = chan->getUsers();
+									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+									{
+										if ((*cl_it)->isAlive())
+											fds.push_back((*cl_it)->getFd());
+										(*cl_it)->addWrite_buffer(rplmsg);
+									}
+									_setSendEvent(true, true, false, true, fds);
+								}
 								break ;
 							case 3: // invite
+								if (!(flag == chan->getOptionInvite()))
+								{
+									chan->setOptionInvite(flag);
+									std::string rplmsg;
+									if (flag)
+										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " :+i" + "\n";
+									else
+										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " :-i" + "\n";
+									std::vector<Client *> client_list = chan->getUsers();
+									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+									{
+										if ((*cl_it)->isAlive())
+											fds.push_back((*cl_it)->getFd());
+										(*cl_it)->addWrite_buffer(rplmsg);
+									}
+									_setSendEvent(true, true, false, true, fds);
+								}
 								break ;
 							case 4: // op
+								if (param_iter == message.parameters.end())
+									client->addWrite_buffer(_696_err_invalidmodeparam(SERVERURL, client->getNickname(), "o"));
+								else if (!__isValidChannelName(message.parameters[0])) // RPL 476
+									client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
+								else if (!chan->isUser(*param_iter))
+									client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), *param_iter));
+								else if (!chan->isOperator(*param_iter))
+								{
+									chan->addOperator(searchClient(*param_iter));
+									std::string rplmsg;
+									rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +o :" + client->getNickname() + "\n";
+									std::vector<Client *> client_list = chan->getUsers();
+									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+									{
+										if ((*cl_it)->isAlive())
+											fds.push_back((*cl_it)->getFd());
+										(*cl_it)->addWrite_buffer(rplmsg);
+									}
+									_setSendEvent(true, true, false, true, fds);
+								}
+								param_iter++;
 								break ;
 							default :
-								client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), *opt_iter));
+								std::string tmp;
+								tmp += *opt_iter;
+								client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), tmp));
 						}
 					}
-					if (모르는 char가 들어온 경우) // RPL 472 경우마다지만 한개만 보내 보기
-						client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), message.parameters[2]));
-					else if (o k l 의 param이 부족한 경우) // RPL 696 경우마다지만 한개만 보내 보기
-						client->addWrite_buffer(_696_err_invalidmodeparam(SERVERURL, client->getNickname(), message.parameters[2]));
-					else if (key 이미 설정됨) // RPL 467
-						client->addWrite_buffer(_467_err_keyset(SERVERURL, client->getNickname(), channelName));
-					else
-						// 동작 - timestamp
-						_setSendEvent(true, true, false, true, fds);
-						// 해당 channel의 모든 유저에게 전송
 				}
 			}
 		}
 	}
 	return (SUCCESS);
 }
+/*
+Tue Feb 06 2024 19:47:09 USERINPUT: C[422AAAAAA] I MODE #asdf +o asdf
+Tue Feb 06 2024 19:47:09 USEROUTPUT: C[422AAAAAA] O :penguin.omega.example.org 401 jijeong asdf :No such nick
+*/
+/*
+Tue Feb 06 2024 19:47:19 USERINPUT: C[422AAAAAA] I MODE #asdf +o jijeong
+Tue Feb 06 2024 19:47:25 USERINPUT: C[422AAAAAA] I MODE #asdf +o kiryud
+Tue Feb 06 2024 19:47:25 USEROUTPUT: C[422AAAAAA] O :jijeong!jeongjinse@localhost MODE #asdf +o :kiryud
+Tue Feb 06 2024 19:47:25 USEROUTPUT: C[422AAAAAB] O :jijeong!jeongjinse@localhost MODE #asdf +o :kiryud
+*/
 
 int	Irc::__not_a_command(Client *client, IRCMessage message)
 {

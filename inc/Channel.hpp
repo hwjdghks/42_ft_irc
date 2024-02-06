@@ -43,6 +43,8 @@ public:
 	std::string getTopic(void);
 	std::string getName(void);
 
+	void setLimit(size_t);
+	size_t getLimit(void);
 	Client *getBot();
 
 	bool isKey(std::string);

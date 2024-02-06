@@ -122,6 +122,16 @@ std::string Channel::getName(void)
 	return name;
 }
 
+void Channel::setLimit(size_t limit)
+{
+	this->limit = limit;
+}
+
+size_t Channel::getLimit(void)
+{
+	return(limit);
+}
+
 Client *Channel::getBot()
 {
 	return (&bot);
