@@ -50,6 +50,7 @@ private:
 	IRCMessage parseMessage(std::string message);
 	bool __isValidNick(const std::string &nick);
 	bool __isValidChannelName(const std::string &chName);
+	std::vector<std::string> __getTargets(const std::string &stargets);
 private:
 	int _command_executor(Client *client, IRCMessage recv_msg);
 	int __cmd_user(Client *client, IRCMessage message);

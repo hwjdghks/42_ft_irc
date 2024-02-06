@@ -178,3 +178,17 @@ bool Irc::isExistingChannel(std::string chName)
 	}
 	return false;
 }
+
+
+std::vector<std::string> Irc::__getTargets(const std::string &stargets)
+{
+	std::vector<std::string>targets;
+	std::stringstream ss(stargets);
+	std::string starget;
+
+	 while (std::getline(ss, starget, ',')) {
+        targets.push_back(starget);
+    }
+
+	return targets;
+}
