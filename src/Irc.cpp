@@ -1012,6 +1012,45 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 					// 그럼 default가 _472_err_unknownmode
 					// 그리고 실행 가능한데 param 못 꺼내오면 (end() 일 때) _696_err_invalidmodeparam
 					// 각 경우 마지막에 성공한다면 channel에게 아니면 본인에게인거니까 ㅇㅇ
+					std::string options = message.parameters[1];
+					std::string::iterator opt_iter = options.begin();
+					bool flag;
+					if (*opt_iter == '+')
+					{
+						flag = true;
+						opt_iter++;
+					}
+					else if (*opt_iter == '-')
+					{
+						flag = flase;
+						opt_iter++;
+					}
+					else
+						flag = true
+					for (; opt_iter != options.end() ; opt_iter++)
+					{
+						int i;
+						char option[] = {'t', 'k', 'l', 'i', 'o'};
+						for (i = 0; i < 5 ; i++)
+							if (*opt_iter == option[i])
+								break ;
+
+						switch (i)
+						{
+							case 0: // topic
+								break ;
+							case 1: // key
+								break ;
+							case 2: // limit
+								break ;
+							case 3: // invite
+								break ;
+							case 4: // op
+								break ;
+							default
+								client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), *opt_iter));
+						}
+					}
 					if (모르는 char가 들어온 경우) // RPL 472 경우마다지만 한개만 보내 보기
 						client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), message.parameters[2]));
 					else if (o k l 의 param이 부족한 경우) // RPL 696 경우마다지만 한개만 보내 보기
