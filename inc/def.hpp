@@ -6,6 +6,7 @@
 
 #define BACKLOG 5
 #define MAX_CLIENT 10
+#define MAX_CHANNEL 10
 #define BUFSIZE 4096
 
 /* 각 클라이언트의 단계별 timeout 기본 세팅 */

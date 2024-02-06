@@ -4,7 +4,6 @@
 
 Irc::Irc(void) : password(NULL), clients(NULL), channels(NULL)
 {
-	commands = {"USER", "PASS", "NICK", "PING", "PONG", "LIST", "WHO", "QUIT", "PRIVMSG", "JOIN", "PART", "TOPIC", "KICK", "INVITE", "MODE"};
 }
 
 Irc::Irc(const Irc &ref)
@@ -61,7 +60,7 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 		if (commandLine.empty())
 			break ;
 		// 리시브 메세지 해석
-		IRCMessage recv_msg = parseMessage(recv_buffer);
+		IRCMessage recv_msg = parseMessage(commandLine);
 		// 명령어에 따라 동작하기
 		if (!client->isRegistered())
 			_register_executor(client, recv_msg);
@@ -301,10 +300,11 @@ int Irc::__register_nick(Client *client, IRCMessage message)
 
 bool Irc::__isCommand(std::string cmd)
 {
-	std::vector<std::string>::iterator iter;
-	for (iter = commands.begin() ; iter != commands.end() ; std::advance(iter, 1))
+	const char	*commands[] = {"USER", "PASS", "NICK", "PING", "PONG", "LIST", "WHO", "QUIT", "PRIVMSG", "JOIN", "PART", "TOPIC", "KICK", "INVITE", "MODE"};
+
+	for (int i = 0; i < 15 ; i++)
 	{
-		if (cmd == *iter)
+		if (!cmd.compare(commands[i]))
 			return (true);
 	}
 	return (false);

@@ -8,11 +8,10 @@
 class Irc
 {
 private:
-	t_send_event				send_msg;
-	std::string					password;
-	std::vector<Client>			clients;
-	std::vector<Channel>		channels;
-	std::vector<std::string>	commands;
+	t_send_event			send_msg;
+	std::string				password;
+	std::vector<Client>		clients;
+	std::vector<Channel>	channels;
 public:
 	Irc();
 	Irc(const Irc &ref);
