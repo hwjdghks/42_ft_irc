@@ -532,6 +532,7 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 	if (client->isAlive())
 		fds.push_back(client->getFd());
 	_setSendEvent(true, false, false, true, fds);
+
 	std::vector<Channel *> &channels = client->getChannels();
 	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
@@ -563,32 +564,89 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 	client->setLife(false);
 	return (SUCCESS);
 }
+
 // 사실상 서버 자체 봇 설계가 여기 들어가게됨
 int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 {
+	std::vector<int> fds;
+	if (client->isAlive())
+		fds.push_back(client->getFd());
+	_setSendEvent(true, false, false, true, fds);
+
 	if (message.parameters.size() < 2) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else
+	{
+		std::vector<std::string> targets;
 		// 첫번째 파라미터를 ','를 기준으로 분리
+		{}
 		// loop
-			if (#으로 시작하지 않음)
-				if (nick일 수 없음)
-					//
-				else if (nick을 가진 유저가 없음)
-					//
+		std::vector<std::string>::iterator target_iter;
+		for (target_iter = targets.begin() ; target_iter != targets.end() ; target_iter++)
+		{
+			if (target_iter[0] == '#' || target_iter[0] == '&')
+			{
+				if (!__isValidChannelName(*target_iter)) // RPL 476
+					client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), *target_iter));
+				else if (!isExistingChannel(*target_iter)) // RPL 403
+					client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), *target_iter));
+//				else if ((채널 모드 n이 true) && (채널 소속이 아님)) 채널의 모드 중 n이 존재하지 않으므로 주석처리 됨
+//					client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), *target_iter));
 				else
+				{
 					// 동작
-			else if (#으로 시작함)
-				if (채널 이름일수가 없음)
-					// RPL 476
-				else if (채널이 없음)
-					// RPL 403
-				else if (채널 소속이 아님 이거 MODE +n임 ㅇㅁㅇ)
-					// RPL
-				else
-					// 동작
-					if (메세지 내용이 ":/BOTNAME COMMAND")
+					// 메세지 작성하기
+					std::string reply_msg;
+
+					std::vector<std::string>::iterator param_iter = message.parameters.begin();
+					param_iter++;
+					std::string msg = *param_iter;
+					param_iter++;
+					for (; param_iter != message.parameters.end() ; param_iter++)
+					{
+						topic = topic + " " + *param_iter;
+					}
+
+					if (메세지 내용이 BOTNAME" COMMAND") // BOTNAME
 						// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
+					else
+					{
+						reply_msg = client->makeClientPrefix() + " PRIVMSG :" + msg;
+					}
+					std::vector<Client *> client_list = chan->getUsers();
+					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+					{
+						// 각 클라이언트의 fd를 저장
+						// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+						if ((*cl_it)->isAlive())
+							fds.push_back((*cl_it)->getFd());
+						client->addWrite_buffer(reply_msg);
+					}
+					_setSendEvent(true, true, false, true, fds);
+					fds.clear();
+				}
+			}
+			else
+			{
+				if (_isNickInUse(client, *target_iter)) // RPL_433_err_nicknameinuse
+					client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), *target_iter));
+				else if (__isValidNick(*target_iter)) // RPL_432_err_erroneusnickname
+					client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), *target_iter));
+				else if (!iter->isUser(*target_iter)) // RPL_401_err_nosuchnick
+					client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), *target_iter));
+				else
+				{
+					// 동작
+					Client *target_client = searchClient(*target_iter);
+					if (target_client->isAlive())
+							fds.push_back(target_client->getFd());
+					target_client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), *target_iter));
+					_setSendEvent(true, true, false, true, fds);
+					fds.clear();
+				}
+			}
+		}
+	}
 	return (SUCCESS);
 }
 
@@ -604,40 +662,82 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 	else
 	{
 		std::vector<std::string> targets;
+		std::vector<std::string> keys;
 		// 첫번째 파라미터를 ','를 기준으로 분리하여 vector에 넣기
 		{}
+		// 두번째 파라미터 param[1]을 ','를 기준으로 분리하여 vector에 넣기
+		if (message.parameters.size() > 1)
+		{}
+		std::vector<std::string>::iterator key_iter;
 		// loop
 		std::vector<std::string>::iterator chan_iter;
+		key_iter = keys.begin();
 		for (chan_iter = targets.begin() ; chan_iter != targets.end() ; chan_iter++)
 		{
-			if (!__isValidChannelName(message.parameters[0]))
-				client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
-			else if (!isExistingChannel(message.parameters[0]))
+			if (!__isValidChannelName(*chan_iter))
+				client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), *chan_iter));
+			else if (!isExistingChannel(*chan_iter)) // 존재하지 않는 채널
 			{
 				// 존재하지 않는 채널
 				// 채널 생성
 				// op로서 가입
+				{
+					Channel new_channel;
+					new_channel.setName(*chan_iter);
+					new_channel.addOperator(client);
+					new_channel.addUser(client);
+					this->channels.push_back(new_channel);
+					client->addChannel(searchChannel(*chan_iter));
+				}
+				client->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter);
 				_setSendEvent(true, true, false, true, fds);
+				fds.clear();
 			}
-			else
+			else // 존재하는 채널
 			{
 				// 채널 탐색 및 값 가져오기
-				Channel *chan = searchChannel(message.parameters[0]);
-				if (client->isMaxJoin())
-					// RPL 405
-				else if (chan->getOptionInvite() && !chan->isInvite(client->getNickname()))
-					// RPL 473
-				else if (chan->getOptionkey() && (message.parameters.size() == 1 || !chan->isKey(message.parameters[1])))
-					// RPL 475
-				else if (chan->getOptionLimit() && chan->isFull())
-					// RPL 471
+				Channel *chan = searchChannel(*chan_iter);
+				if (client->isMaxJoin()) // RPL_405_err_toomanychannels
+					client->addWrite_buffer(_405_err_toomanychannels(SERVERURL, client->getNickname(), *chan_iter));	
+				else if (chan->getOptionInvite() && !chan->isInvite(client->getNickname())) // RPL_473_err_inviteonlychan
+					client->addWrite_buffer(_473_err_inviteonlychan(SERVERURL, client->getNickname(), *chan_iter));
+				else if (chan->getOptionkey() && (key_iter == keys.end() || !chan->isKey(*key_iter))) // RPL_475_err_badchannelkey
+					client->addWrite_buffer(_475_err_badchannelkey(SERVERURL, client->getNickname(), *chan_iter));
+				else if (chan->getOptionLimit() && chan->isFull()) // RPL_471_err_channelisfull
+					client->addWrite_buffer(_471_err_channelisfull(SERVERURL, client->getNickname(), *chan_iter));
 				else
+				{
 					// 일반 유저로 가입
+					std::vector<Client *> client_list = chan->getUsers();
+					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+					{
+						// 각 클라이언트의 fd를 저장
+						// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+						if ((*cl_it)->isAlive())
+							fds.push_back((*cl_it)->getFd());
+						client->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter);
+					}
+					// 채널에 유저 추가
+					chan->addUser(client);
+					chan->delInvite(client->getNickname());
+					_setSendEvent(true, true, false, true, fds);
+					fds.clear();
+				}
 			}
+			if (key_iter != keys.end())
+				key_iter++;
 		}
 	}
 	return (SUCCESS);
 }
+/*
+join #aa
+:nick!uuuu@127.0.0.1 JOIN :#aa
+:penguin.omega.example.org 353 nick = #aa :@nick
+:penguin.omega.example.org 366 nick #aa :End of /NAMES list.
+:kiryud!jeongjinse@127.0.0.1 JOIN :#aa
+:jijeong!jeongjinse@127.0.0.1 JOIN :#aa
+*/
 
 int Irc::__cmd_part(Client *client, IRCMessage message)
 {
@@ -684,6 +784,11 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " PART " + *chan_iter + " :" + msg);
 					}
 					// 채널에서 삭제
+					chan->delOperator(client->getNickname());
+					chan->delUser(client->getNickname());
+					client->delChannel(chan->getName());
+					_setSendEvent(true, true, false, true, fds);
+					fds.clear();
 				}
 				else // RPL
 					client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), *chan_iter));

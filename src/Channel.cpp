@@ -11,6 +11,7 @@ Channel::Channel(void) {
 	bot.setUsername("ft_irc");
 	bot.setRealname("RoBoT");
 	bot.setBot(true);
+	bot.setLife(false);
 	users.push_back(&bot);
 }
 

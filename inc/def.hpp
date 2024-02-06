@@ -26,8 +26,6 @@ static const char *MSG_FAIL_REGISTER = "Register timeout";
 static const char *MSG_FAIL_TIMEOUT = "Connection lost";
 static const char *MSG_FAIL_SYSTEM = "System call error";
 
-# define MAX_CHANNEL 10
-
 # define SUCCESS 1
 # define FAIL 0
 

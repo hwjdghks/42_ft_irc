@@ -200,11 +200,11 @@ bool Client::isMaxJoin(void)
 	return (MAX_CHANNEL == this->channels.size());
 }
 
-bool Client::addChannel(Channel &channel)
+bool Client::addChannel(Channel *channel)
 {
-	if (isChannel(channel.getName()))
+	if (isChannel(channel->getName()))
 		return false;
-	channels.push_back(&channel);
+	channels.push_back(channel);
 	return true;
 }
 

@@ -64,7 +64,7 @@ public:
 	int delWrite_buffer();
 	void rollbackBuf(std::string buf, ssize_t len);
 
-	bool addChannel(Channel &channel);
+	bool addChannel(Channel *channel);
 	bool isChannel(const std::string &name) const;
 	void delChannel(const std::string &name);
 
