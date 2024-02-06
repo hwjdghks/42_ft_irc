@@ -2,9 +2,7 @@
 #include <iostream> /* test header */
 #include <sstream>
 
-Irc::Irc(void) : password(NULL), clients(NULL), channels(NULL)
-{
-}
+Irc::Irc(void) {}
 
 Irc::Irc(const Irc &ref)
 {
@@ -212,10 +210,10 @@ int	Irc::_setSendEvent(bool recv_work, bool recv_time, bool recv_close, bool to_
 
 int	Irc::_clearSendEvent()
 {
-	send_msg.recv_work;
-	send_msg.recv_time;
-	send_msg.recv_close;
-	send_msg.to_send;
+	send_msg.recv_work = false;
+	send_msg.recv_time = false;
+	send_msg.recv_close = false;
+	send_msg.to_send = false;
 	send_msg.fds.clear();
 	return (SUCCESS);
 }
