@@ -243,13 +243,15 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 		__register_nick(client, recv_msg);
 	else if (__isCommand(recv_msg.command)) // RPL_451_err_notregistered
 	{
-		std::vector<int> fds(client->getFd());
+		std::vector<int> fds;
+		fds.push_back(client->getFd());
 		_setSendEvent(false, false, false, true, fds);
 		client->addWrite_buffer(_451_err_notregistered(SERVERURL, client->getNickname()));
 	}
 	if (client->isRegistered()) // RPL_001_rpl_welcome
 	{
-		std::vector<int> fds(client->getFd());
+		std::vector<int> fds;
+		fds.push_back(client->getFd());
 		_setSendEvent(false, true, false, true, fds);
 		client->addWrite_buffer(_001_rpl_welcome(SERVERURL, client->getNickname(), client->makeClientPrefix()));
 	}
@@ -1177,7 +1179,8 @@ Tue Feb 06 2024 19:47:25 USEROUTPUT: C[422AAAAAB] O :jijeong!jeongjinse@localhos
 int	Irc::__not_a_command(Client *client, IRCMessage message)
 {
 	// RPL_421_err_unknowncommand
-	std::vector<int> fds(client->getFd());
+	std::vector<int> fds;
+	fds.push_back(client->getFd());
 	_setSendEvent(true, false, false, true, fds);
 	client->addWrite_buffer(_421_err_unknowncommand(SERVERURL, client->getNickname(), message.command));
 	return (SUCCESS);
