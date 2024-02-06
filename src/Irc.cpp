@@ -458,6 +458,7 @@ int Irc::__cmd_pong(Client *client, IRCMessage message)
 
 int Irc::__cmd_list(Client *client, IRCMessage message)
 {
+	(void)message; // 만약 끝까지 필요없다면 인자 자체 삭제 요망
 	std::vector<int> fds;
 	// 자기 자신에게 전송
 	if (client->isAlive())
