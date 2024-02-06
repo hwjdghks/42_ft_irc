@@ -579,12 +579,12 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 	{
 		std::vector<std::string> targets;
 		// 첫번째 파라미터를 ','를 기준으로 분리
-		targets = getTarget(message.parameters[0]);
+		targets = __getTargets(message.parameters[0]);
 		// loop
 		std::vector<std::string>::iterator target_iter;
 		for (target_iter = targets.begin() ; target_iter != targets.end() ; target_iter++)
 		{
-			if (target_iter[0] == '#' || target_iter[0] == '&')
+			if (__isValidChannelName(*target_iter))
 			{
 				if (!__isValidChannelName(*target_iter)) // RPL 476
 					client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), *target_iter));
@@ -595,6 +595,7 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 				else
 				{
 					// 동작
+					Channel *chan = searchChannel(*target_iter);
 					// 메세지 작성하기
 					std::string reply_msg;
 
@@ -604,20 +605,20 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 					param_iter++;
 					for (; param_iter != message.parameters.end() ; param_iter++)
 					{
-						topic = topic + " " + *param_iter;
+						msg = msg + " " + *param_iter;
 					}
 
-					if (메세지 내용이 BOTNAME" COMMAND") // BOTNAME
-					{
-						if (chan->isUser(BOTNAME))
-						{
-							Client *bot = chan->getBot();
-							// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
-							std::string bot_msg = "cmd1 cmd2 cmd3 ...";
-							reply_msg = bot->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + bot_msg + "\n";
-						}
-					}
-					else
+					// if (메세지 내용이 BOTNAME" COMMAND") // BOTNAME
+					// {
+					// 	if (chan->isUser(BOTNAME))
+					// 	{
+					// 		Client *bot = chan->getBot();
+					// 		// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
+					// 		std::string bot_msg = "cmd1 cmd2 cmd3 ...";
+					// 		reply_msg = bot->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + bot_msg + "\n";
+					// 	}
+					// }
+					// else
 					{
 						reply_msg = client->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + msg + "\n";
 					}
@@ -636,19 +637,27 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 			}
 			else
 			{
-				if (_isNickInUse(client, *target_iter)) // RPL_433_err_nicknameinuse
-					client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), *target_iter));
-				else if (__isValidNick(*target_iter)) // RPL_432_err_erroneusnickname
+				if (__isValidNick(*target_iter)) // RPL_432_err_erroneusnickname
 					client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), *target_iter));
-				else if (!iter->isUser(*target_iter)) // RPL_401_err_nosuchnick
-					client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), *target_iter));
 				else
 				{
 					// 동작
 					Client *target_client = searchClient(*target_iter);
+					if (target_client == NULL)
+						client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), *target_iter));
+
+					std::vector<std::string>::iterator param_iter = message.parameters.begin();
+					param_iter++;
+					std::string msg = *param_iter;
+					param_iter++;
+					for (; param_iter != message.parameters.end() ; param_iter++)
+					{
+						msg = msg + " " + *param_iter;
+					}
+
 					if (target_client->isAlive())
 							fds.push_back(target_client->getFd());
-					target_client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), *target_iter));
+					client->addWrite_buffer(client->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + msg + "\n");
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
 				}
@@ -672,10 +681,10 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 		std::vector<std::string> targets;
 		std::vector<std::string> keys;
 		// 첫번째 파라미터를 ','를 기준으로 분리하여 vector에 넣기
-		targets = getTarget(message.parameters[0]);
+		targets = __getTargets(message.parameters[0]);
 		// 두번째 파라미터 param[1]을 ','를 기준으로 분리하여 vector에 넣기
 		if (message.parameters.size() > 1)
-		keys = getTarget(message.parameters[1]);
+		keys = __getTargets(message.parameters[1]);
 		std::vector<std::string>::iterator key_iter;
 		// loop
 		std::vector<std::string>::iterator chan_iter;
@@ -760,7 +769,7 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 	{
 		std::vector<std::string> targets;
 		// 첫번째 파라미터를 ','를 기준으로 분리하여 vector에 넣기
-		targets = getTarget(message.parameters[0]);
+		targets = __getTargets(message.parameters[0]);
 		// loop
 		std::vector<std::string>::iterator chan_iter;
 		for (chan_iter = targets.begin() ; chan_iter != targets.end() ; chan_iter++)

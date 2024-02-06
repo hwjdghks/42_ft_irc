@@ -126,6 +126,20 @@ Client *Channel::getBot()
 	return (&bot);
 }
 
+bool Channel::isKey(std::string key)
+{
+	if (password == key)
+		return (true);
+	return (false);
+}
+
+bool Channel::isFull()
+{
+	if (users.size() >= limit)
+		return (true);
+	return (false);
+}
+
 bool Channel::addInvite(Client *client)
 {
 	if (isInvite(client->getNickname()))

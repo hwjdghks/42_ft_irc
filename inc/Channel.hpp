@@ -45,6 +45,9 @@ public:
 
 	Client *getBot();
 
+	bool isKey(std::string);
+	bool isFull();
+
 	bool addInvite(Client *client);
 	bool isInvite(const std::string &nickname);
 	void delInvite(const std::string &nickname);
