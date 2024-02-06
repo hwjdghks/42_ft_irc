@@ -212,13 +212,11 @@ int	Irc::_setSendEvent(bool recv_work, bool recv_time, bool recv_close, bool to_
 
 int	Irc::_clearSendEvent()
 {
-	std::vector<int> fds;
-
 	send_msg.recv_work;
 	send_msg.recv_time;
 	send_msg.recv_close;
 	send_msg.to_send;
-	send_msg.fds = fds;
+	send_msg.fds.clear();
 	return (SUCCESS);
 }
 
@@ -1001,11 +999,15 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 		{
 			// 채널 탐색 및 값 가져오기
 			Channel *chan = searchChannel(message.parameters[0]);
-			std::string channelMode = chan->getMode();
-			std::string channelModeParam = chan->getModeParam();
 			if (message.parameters.size() == 1)
 			{
+				std::string channelMode = chan->getMode(); // 이건 아무나 볼 수 있어도 되는디
+				std::string channelModeParam = chan->getModeParam(client->getNickname()); // 여기서 비밀번호는 채널 소속만 봐야함 ㅇㅁㅇ
+				// 채널 유저 맞음 :penguin.omega.example.org 324 jijeong #asdf +klnt 123243546 :10
+				// 채널 유저 아님 :penguin.omega.example.org 324 kiryud #asdf +klnt <key> :10
+				// key false일 때 :penguin.omega.example.org 324 kiryud #asdf +klnt :10
 				client->addWrite_buffer(_324_rpl_channelmodeis(SERVERURL, client->getNickname(), chan->getName(), channelMode, channelModeParam));
+				_setSendEvent(true, true, false, true, fds);
 			}
 			else
 			{
@@ -1031,11 +1033,12 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 					}
 					else if (*opt_iter == '-')
 					{
-						flag = flase;
+						flag = false;
 						opt_iter++;
 					}
 					else
-						flag = true
+						flag = true;
+
 					for (; opt_iter != options.end() ; opt_iter++)
 					{
 						int i;
@@ -1056,7 +1059,7 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 								break ;
 							case 4: // op
 								break ;
-							default
+							default :
 								client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), *opt_iter));
 						}
 					}

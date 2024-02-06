@@ -1,5 +1,6 @@
 #include "Client.hpp"
 #include "Channel.hpp"
+#include <sstream>
 
 Channel::Channel(void) {
 	option[TITLE] = false;
@@ -139,6 +140,46 @@ bool Channel::isFull()
 		return (true);
 	return (false);
 }
+
+// :penguin.omega.example.org 324 jijeong #asdf +klnt 123243546 :10
+// :penguin.omega.example.org 324 kiryud #asdf +klnt <key> :10
+std::string Channel::getMode()
+{
+	std::string str;
+	str = "+";
+	if (option[TITLE])
+		str += "t";
+	if (option[KEY])
+		str += "k";
+	if (option[LIMIT])
+		str += "l";
+	if (option[INVITE])
+		str += "i";
+	return (str);
+}
+
+std::string Channel::getModeParam(std::string nickname)
+{
+	std::string str;
+
+	if (option[KEY])
+	{
+		if (isUser(nickname))
+			str += password;
+		else
+			str += "<KEY>";
+		str += " ";
+	}
+	str += ":";
+	if (option[LIMIT])
+	{
+		std::stringstream ss;
+		ss << limit;
+		std::string limit_num = ss.str();
+		str += limit_num;
+	}return (str);
+}
+
 
 bool Channel::addInvite(Client *client)
 {

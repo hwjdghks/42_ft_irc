@@ -49,7 +49,7 @@ public:
 	bool isFull();
 
 	std::string getMode();
-	std::string getModeParam();
+	std::string getModeParam(std::string);
 
 	bool addInvite(Client *client);
 	bool isInvite(const std::string &nickname);
