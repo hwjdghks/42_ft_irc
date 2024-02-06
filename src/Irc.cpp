@@ -579,7 +579,7 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 	{
 		std::vector<std::string> targets;
 		// 첫번째 파라미터를 ','를 기준으로 분리
-		{}
+		targets = getTarget(message.parameters[0]);
 		// loop
 		std::vector<std::string>::iterator target_iter;
 		for (target_iter = targets.begin() ; target_iter != targets.end() ; target_iter++)
@@ -664,10 +664,10 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 		std::vector<std::string> targets;
 		std::vector<std::string> keys;
 		// 첫번째 파라미터를 ','를 기준으로 분리하여 vector에 넣기
-		{}
+		targets = getTarget(message.parameters[0]);
 		// 두번째 파라미터 param[1]을 ','를 기준으로 분리하여 vector에 넣기
 		if (message.parameters.size() > 1)
-		{}
+		keys = getTarget(message.parameters[1]);
 		std::vector<std::string>::iterator key_iter;
 		// loop
 		std::vector<std::string>::iterator chan_iter;
@@ -752,7 +752,7 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 	{
 		std::vector<std::string> targets;
 		// 첫번째 파라미터를 ','를 기준으로 분리하여 vector에 넣기
-		{}
+		targets = getTarget(message.parameters[0]);
 		// loop
 		std::vector<std::string>::iterator chan_iter;
 		for (chan_iter = targets.begin() ; chan_iter != targets.end() ; chan_iter++)
