@@ -8,7 +8,7 @@ class Channel
 {
 private:
 	bool					option[4];
-	int						limit;
+	size_t					limit;
 	Client					bot;
 	std::string				password;
 	std::string				topic;
@@ -47,6 +47,9 @@ public:
 
 	bool isKey(std::string);
 	bool isFull();
+
+	std::string getMode();
+	std::string getModeParam();
 
 	bool addInvite(Client *client);
 	bool isInvite(const std::string &nickname);
