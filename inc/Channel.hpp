@@ -43,6 +43,8 @@ public:
 	std::string getTopic(void);
 	std::string getName(void);
 
+	Client *getBot();
+
 	bool addInvite(Client *client);
 	bool isInvite(const std::string &nickname);
 	void delInvite(const std::string &nickname);

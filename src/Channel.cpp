@@ -121,6 +121,11 @@ std::string Channel::getName(void)
 	return name;
 }
 
+Client *Channel::getBot()
+{
+	return (&bot);
+}
+
 bool Channel::addInvite(Client *client)
 {
 	if (isInvite(client->getNickname()))
