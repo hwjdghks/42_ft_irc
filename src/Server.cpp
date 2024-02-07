@@ -108,6 +108,7 @@ void Server::run(void)
 						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
 						if (!setReplyEventToClient(current_event->ident, result))
 							return this->stop();
+						close(current_event->ident);
 					}
 					continue ;
 				}
@@ -127,6 +128,7 @@ void Server::run(void)
 						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
 						if (!setReplyEventToClient(current_event->ident, result))
 							return this->stop();
+						close(current_event->ident);
 						continue ;
 					}
 					if (!recvMsg(current_event->ident))
@@ -144,6 +146,7 @@ void Server::run(void)
 						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
 						if (!setReplyEventToClient(current_event->ident, result))
 							return this->stop(); /* kevent error */
+						close(current_event->ident);
 						continue ;
 					}
 					if (!sendMsg(current_event->ident, current_event->udata))
