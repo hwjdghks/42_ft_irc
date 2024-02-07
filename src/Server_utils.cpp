@@ -174,7 +174,7 @@ bool Server::handleTimerEvent(const int &fd, void *udata)
 	{
 	case UDATA_CHECK_REIGISTER: /* 등록 시간제한이 지났을 경우 */
 		client = control.searchClient(fd);
-		if (!client->isRegistered())
+		if (client && (!client->isAlive() || !client->isRegistered()))
 		{
 			event = control.quit(fd, MSG_FAIL_REGISTER);
 			if (!this->setReplyEventToClient(fd, event))
