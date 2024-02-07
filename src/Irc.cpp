@@ -462,11 +462,11 @@ int	Irc::__cmd_ping(Client *client, IRCMessage message)
 int Irc::__cmd_pong(Client *client, IRCMessage message)
 {
 	std::vector<int> fds;
-	if (client->isAlive())
-		fds.push_back(client->getFd());
 
 	if (message.parameters.size() == 0) // RPL_461_err_needmoreparams
 	{
+		if (client->isAlive())
+			fds.push_back(client->getFd());
 		_setSendEvent(true, false, false, true, fds);
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	}
