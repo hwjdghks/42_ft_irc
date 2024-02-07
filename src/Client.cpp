@@ -57,6 +57,11 @@ void Client::setLife(const bool &life)
 	this->life = life;
 }
 
+void Client::setRegi(int i, bool flag)
+{
+	regi[i] = flag;
+}
+
 void Client::setFd(const int &fd)
 {
 	this->fd = fd;

@@ -37,6 +37,8 @@ public:
 
 	void setLife(const bool &life);
 
+	void setRegi(int, bool);
+
 	void setPassword(const std::string &password);
 	void setUsername(const std::string &username);
 	void setNickname(const std::string &nickname);

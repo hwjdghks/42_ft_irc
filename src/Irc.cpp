@@ -37,6 +37,8 @@ int Irc::createClient(int fd, std::string hostname)
 	Client new_client;
 	new_client.setFd(fd);
 	new_client.setHostname(hostname);
+	if (password.empty())
+		new_client.setRegi(PASS, true);
 	this->clients.push_back(new_client);
 	return (SUCCESS);
 }

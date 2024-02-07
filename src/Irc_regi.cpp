@@ -75,6 +75,7 @@ int Irc::__register_user(Client *client, IRCMessage message)
 	{
 		_setSendEvent(false, false, false, true, fds);		
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
+		client->setRegi(USER, true);
 		return FAIL;
 	}
 }
@@ -94,6 +95,7 @@ int Irc::__register_pass(Client* client, IRCMessage message)
 	{
 		_setSendEvent(false, false, false, false, fds);
 		client->setPassword(message.parameters[0]);
+		client->setRegi(PASS, true);
 		return SUCCESS;
 	}
 }
@@ -125,6 +127,7 @@ int Irc::__register_nick(Client* client, IRCMessage message)
 	{
 		_setSendEvent(false, false, false, false, fds);
 		client->setNickname(message.parameters[0]);
+		client->setRegi(NICK, true);
 		return SUCCESS;
 	}
 }
