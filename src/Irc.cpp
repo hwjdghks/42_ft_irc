@@ -1086,6 +1086,7 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 										client->addWrite_buffer(_467_err_keyset(SERVERURL, client->getNickname(), chan->getName()));
 									else
 									{
+										chan->setOptionTitle(flag);
 										if (flag)
 										{
 											chan->setPassword(*param_iter);
