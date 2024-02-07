@@ -108,6 +108,7 @@ void Server::run(void)
 						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
 						if (!setReplyEventToClient(current_event->ident, result))
 							return this->stop();
+						delTimerEvent(current_event->ident);
 						close(current_event->ident);
 					}
 					continue ;
@@ -128,6 +129,7 @@ void Server::run(void)
 						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
 						if (!setReplyEventToClient(current_event->ident, result))
 							return this->stop();
+						delTimerEvent(current_event->ident);
 						close(current_event->ident);
 						continue ;
 					}
@@ -146,6 +148,7 @@ void Server::run(void)
 						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
 						if (!setReplyEventToClient(current_event->ident, result))
 							return this->stop(); /* kevent error */
+						delTimerEvent(current_event->ident);
 						close(current_event->ident);
 						continue ;
 					}
