@@ -421,11 +421,14 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 			std::vector<Client *> client_list = curr_ch->getUsers();
 			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			{
-				// 각 클라이언트의 fd를 저장
-				// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
-				if ((*cl_it)->isAlive())
-					fds.push_back((*cl_it)->getFd());
-				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
+				if (!(*cl_it)->isBot())
+				{
+					// 각 클라이언트의 fd를 저장
+					// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+					if ((*cl_it)->isAlive())
+						fds.push_back((*cl_it)->getFd());
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
+				}
 			}
 		}
 		// 해당 유저들의 fd를 t_send_event에 넣는다
@@ -563,14 +566,17 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " QUIT :Quit: " + QUITMSG + "\r\n");
 				else
 				{
-					std::vector<std::string>::iterator iter = message.parameters.begin();
-					std::string msg = *iter;
-					iter++;
-					for (; iter != message.parameters.end() ; iter++)
+					if (!(*cl_it)->isBot())
 					{
-						msg = msg + " " + *iter;
+						std::vector<std::string>::iterator iter = message.parameters.begin();
+						std::string msg = *iter;
+						iter++;
+						for (; iter != message.parameters.end() ; iter++)
+						{
+							msg = msg + " " + *iter;
+						}
+						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " QUIT :Quit: " + msg + "\r\n");
 					}
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " QUIT :Quit: " + msg + "\r\n");
 				}
 			}
 	}
@@ -748,11 +754,14 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					std::vector<Client *> client_list = chan->getUsers();
 					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 					{
-						// 각 클라이언트의 fd를 저장
-						// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
-						if ((*cl_it)->isAlive())
-							fds.push_back((*cl_it)->getFd());
-						client->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter + "\r\n");
+						if (!(*cl_it)->isBot())
+						{
+							// 각 클라이언트의 fd를 저장
+							// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+							if ((*cl_it)->isAlive())
+								fds.push_back((*cl_it)->getFd());
+							client->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter + "\r\n");
+						}
 					}
 					// 채널에 유저 추가
 					chan->addUser(client);
@@ -814,11 +823,14 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 					std::vector<Client *> client_list = chan->getUsers();
 					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 					{
-						// 각 클라이언트의 fd를 저장
-						// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
-						if ((*cl_it)->isAlive())
-							fds.push_back((*cl_it)->getFd());
-						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " PART " + *chan_iter + " :" + msg + "\r\n");
+						if (!(*cl_it)->isBot())
+						{
+							// 각 클라이언트의 fd를 저장
+							// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+							if ((*cl_it)->isAlive())
+								fds.push_back((*cl_it)->getFd());
+							(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " PART " + *chan_iter + " :" + msg + "\r\n");
+						}
 					}
 					// 채널에서 삭제
 					chan->delOperator(client->getNickname());
@@ -883,9 +895,12 @@ int Irc::__cmd_topic(Client *client, IRCMessage message)
 				std::vector<Client *> client_list = iter->getUsers();
 				for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 				{
-					if ((*cl_it)->isAlive())
-						fds.push_back((*cl_it)->getFd());
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " TOPIC " + iter->getName() + " :" + topic + "\r\n");
+					if (!(*cl_it)->isBot())
+					{
+						if ((*cl_it)->isAlive())
+							fds.push_back((*cl_it)->getFd());
+						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " TOPIC " + iter->getName() + " :" + topic + "\r\n");
+					}
 				}
 				_setSendEvent(true, true, false, true, fds);
 			}
@@ -935,11 +950,14 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 			std::vector<Client *> client_list = iter->getUsers();
 			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			{
-				if ((*cl_it)->getNickname() == message.parameters[1])
-					tmp_client = *cl_it;
-				if ((*cl_it)->isAlive())
-					fds.push_back((*cl_it)->getFd());
-				(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " KICK " + iter->getName() + " :" + msg + "\r\n");
+				if (!(*cl_it)->isBot())
+				{
+					if ((*cl_it)->getNickname() == message.parameters[1])
+						tmp_client = *cl_it;
+					if ((*cl_it)->isAlive())
+						fds.push_back((*cl_it)->getFd());
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " KICK " + iter->getName() + " :" + msg + "\r\n");
+				}
 			}
 			_setSendEvent(true, true, false, true, fds);
 			// 해당 유저를 channel에서 제거
@@ -984,9 +1002,12 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 			std::vector<Client *> client_list = iter->getUsers();
 			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			{
-				if ((*cl_it)->isAlive())
-					fds.push_back((*cl_it)->getFd());
-				(*cl_it)->addWrite_buffer(_341_rpl_inviting(SERVERURL, client->getNickname(), iter->getName(), message.parameters[1]));
+				if (!(*cl_it)->isBot())
+				{
+					if ((*cl_it)->isAlive())
+						fds.push_back((*cl_it)->getFd());
+					(*cl_it)->addWrite_buffer(_341_rpl_inviting(SERVERURL, client->getNickname(), iter->getName(), message.parameters[1]));
+				}
 			}
 			// 해당 유저에게 초대 메세지 보내기
 			Client *tmp_client = searchClient(message.parameters[1]);
@@ -1091,9 +1112,12 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									std::vector<Client *> client_list = chan->getUsers();
 									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 									{
-										if ((*cl_it)->isAlive())
-											fds.push_back((*cl_it)->getFd());
-										(*cl_it)->addWrite_buffer(rplmsg);
+										if (!(*cl_it)->isBot())
+										{
+											if ((*cl_it)->isAlive())
+												fds.push_back((*cl_it)->getFd());
+											(*cl_it)->addWrite_buffer(rplmsg);
+										}
 									}
 									_setSendEvent(true, true, false, true, fds);
 								}
@@ -1122,9 +1146,12 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 										std::vector<Client *> client_list = chan->getUsers();
 										for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 										{
-											if ((*cl_it)->isAlive())
-												fds.push_back((*cl_it)->getFd());
-											(*cl_it)->addWrite_buffer(rplmsg);
+											if (!(*cl_it)->isBot())
+											{
+												if ((*cl_it)->isAlive())
+													fds.push_back((*cl_it)->getFd());
+												(*cl_it)->addWrite_buffer(rplmsg);
+											}
 										}
 										_setSendEvent(true, true, false, true, fds);
 									}
@@ -1151,9 +1178,12 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									std::vector<Client *> client_list = chan->getUsers();
 									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 									{
-										if ((*cl_it)->isAlive())
-											fds.push_back((*cl_it)->getFd());
-										(*cl_it)->addWrite_buffer(rplmsg);
+										if (!(*cl_it)->isBot())
+										{
+											if ((*cl_it)->isAlive())
+												fds.push_back((*cl_it)->getFd());
+											(*cl_it)->addWrite_buffer(rplmsg);
+										}
 									}
 									_setSendEvent(true, true, false, true, fds);
 								}
@@ -1171,9 +1201,12 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									std::vector<Client *> client_list = chan->getUsers();
 									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 									{
-										if ((*cl_it)->isAlive())
-											fds.push_back((*cl_it)->getFd());
-										(*cl_it)->addWrite_buffer(rplmsg);
+										if (!(*cl_it)->isBot())
+										{
+											if ((*cl_it)->isAlive())
+												fds.push_back((*cl_it)->getFd());
+											(*cl_it)->addWrite_buffer(rplmsg);
+										}
 									}
 									_setSendEvent(true, true, false, true, fds);
 								}
@@ -1193,9 +1226,12 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									std::vector<Client *> client_list = chan->getUsers();
 									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 									{
-										if ((*cl_it)->isAlive())
-											fds.push_back((*cl_it)->getFd());
-										(*cl_it)->addWrite_buffer(rplmsg);
+										if (!(*cl_it)->isBot())
+										{
+											if ((*cl_it)->isAlive())
+												fds.push_back((*cl_it)->getFd());
+											(*cl_it)->addWrite_buffer(rplmsg);
+										}
 									}
 									_setSendEvent(true, true, false, true, fds);
 								}
