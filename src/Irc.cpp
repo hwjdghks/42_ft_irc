@@ -69,6 +69,7 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 			_register_executor(client, recv_msg);
 		else
 			_command_executor(client, recv_msg);
+		std::cerr << "    (SUCCESS)" << std::endl;
 	}
 	return (send_msg);
 }
@@ -586,6 +587,8 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 		targets = __getTargets(message.parameters[0]);
 		// loop
 		std::vector<std::string>::iterator target_iter;
+		for (target_iter = targets.begin() ; target_iter != targets.end() ; target_iter++)
+			std::cerr << "[" << *target_iter << "]\n";
 		for (target_iter = targets.begin() ; target_iter != targets.end() ; target_iter++)
 		{
 			if (__isValidChannelName(*target_iter))

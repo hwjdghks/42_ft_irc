@@ -95,7 +95,8 @@ int Irc::__register_pass(Client* client, IRCMessage message)
 	{
 		_setSendEvent(false, false, false, false, fds);
 		client->setPassword(message.parameters[0]);
-		client->setRegi(PASS, true);
+		if (!password.compare(message.parameters[0]))
+			client->setRegi(PASS, true);
 		return SUCCESS;
 	}
 }
