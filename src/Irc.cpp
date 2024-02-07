@@ -126,7 +126,7 @@ t_send_event Irc::ping(int fd)
 		fds.push_back(fd);
 	_setSendEvent(false, false, false, true, fds);
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
-	client->addWrite_buffer("PING :" SERVERURL);
+	client->addWrite_buffer("PING " SERVERURL "\r\n");
 	return (send_msg);
 }
 
