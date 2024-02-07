@@ -1082,7 +1082,29 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									client->addWrite_buffer(_696_err_invalidmodeparam(SERVERURL, client->getNickname(), "k"));
 								else if (!(flag == chan->getOptionkey()))
 								{
-									client->addWrite_buffer(_467_err_keyset(SERVERURL, client->getNickname(), chan->getName()));
+									if (!flag && *param_iter->compare(chan->getPassword()))
+										client->addWrite_buffer(_467_err_keyset(SERVERURL, client->getNickname(), chan->getName()));
+									else
+									{
+										if (flag)
+										{
+											chan->setPassword(*param_iter);
+											rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +k :" + *param_iter + "\n";
+										}
+										else
+										{
+											chan->delPassword();
+											rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -k :" + *param_iter + "\n";
+										}
+										std::vector<Client *> client_list = chan->getUsers();
+										for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+										{
+											if ((*cl_it)->isAlive())
+												fds.push_back((*cl_it)->getFd());
+											(*cl_it)->addWrite_buffer(rplmsg);
+										}
+										_setSendEvent(true, true, false, true, fds);
+									}
 								}
 								break ;
 							case 2: // limit

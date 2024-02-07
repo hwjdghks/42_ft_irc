@@ -81,6 +81,10 @@ bool Channel::getOptionInvite(void)
 	return (option[INVITE]);
 }
 
+void Channel::delPassword()
+{
+	password.clear();
+}
 
 std::vector<Client *> &Channel::getOperators(void)
 {
