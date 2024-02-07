@@ -404,7 +404,7 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else if (_isNickInUse(client, message.parameters[0])) // RPL_433_err_nicknameinuse
 		client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
-	else if (__isValidNick(message.parameters[0])) // RPL_432_err_erroneusnickname
+	else if (!__isValidNick(message.parameters[0])) // RPL_432_err_erroneusnickname
 		client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
 	{
@@ -642,11 +642,14 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 					std::vector<Client *> client_list = chan->getUsers();
 					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 					{
-						// 각 클라이언트의 fd를 저장
-						// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
-						if ((*cl_it)->isAlive())
-							fds.push_back((*cl_it)->getFd());
-						client->addWrite_buffer(reply_msg);
+						if (!(*cl_it)->isBot())
+						{
+							// 각 클라이언트의 fd를 저장
+							// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+							if ((*cl_it)->isAlive())
+								fds.push_back((*cl_it)->getFd());
+							client->addWrite_buffer(reply_msg);
+						}
 					}
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
