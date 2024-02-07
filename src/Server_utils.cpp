@@ -167,14 +167,14 @@ bool Server::sendMsg(const int &fd, void *udata)
 bool Server::handleTimerEvent(const int &fd, void *udata)
 {
 	t_send_event event;
-	Client *client;
+	Client *client = NULL;
 	intptr_t event_case = reinterpret_cast<intptr_t>(udata);
 
 	switch (event_case)
 	{
 	case UDATA_CHECK_REIGISTER: /* 등록 시간제한이 지났을 경우 */
 		client = control.searchClient(fd);
-		if (!client->isRegistered())
+		if (client && !client->isRegistered())
 		{
 			event = control.quit(fd, MSG_FAIL_REGISTER);
 			if (!this->setReplyEventToClient(fd, event))
