@@ -167,7 +167,7 @@ bool Server::sendMsg(const int &fd, void *udata)
 bool Server::handleTimerEvent(const int &fd, void *udata)
 {
 	t_send_event event;
-	Client *client;
+	Client *client = NULL;
 	intptr_t event_case = reinterpret_cast<intptr_t>(udata);
 
 	switch (event_case)
@@ -179,6 +179,8 @@ bool Server::handleTimerEvent(const int &fd, void *udata)
 			event = control.quit(fd, MSG_FAIL_REGISTER);
 			if (!this->setReplyEventToClient(fd, event))
 				return false;
+			delTimerEvent(fd);
+			close(fd);
 		}
 		break;
 	case UDATA_CHECK_CONNECT: /* ping을 보내야 함 */
@@ -191,6 +193,8 @@ bool Server::handleTimerEvent(const int &fd, void *udata)
 		event = control.quit(fd, MSG_FAIL_TIMEOUT);
 		if (!this->setReplyEventToClient(fd, event))
 			return false;
+		delTimerEvent(fd);
+		close(fd);
 		break;
 	default:
 		break;
