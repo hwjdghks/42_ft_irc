@@ -62,6 +62,11 @@ void Client::setRegi(int i, bool flag)
 	regi[i] = flag;
 }
 
+bool Client::getRegi(int i)
+{
+	return(regi[i]);
+}
+
 void Client::setFd(const int &fd)
 {
 	this->fd = fd;
@@ -161,8 +166,16 @@ std::string Client::getLineOfRead_buffer(void)
 	loc = read_buffer.find('\n');
 	if (loc != std::string::npos)
 	{
-		res = read_buffer.substr(0, loc);
-		read_buffer = read_buffer.substr(loc + 1, read_buffer.size() - loc);
+		if (read_buffer[loc - 1] == '\r')
+		{
+			res = read_buffer.substr(0, loc - 1);
+			read_buffer = read_buffer.substr(loc + 1, read_buffer.size() - loc);
+		}
+		else
+		{
+			res = read_buffer.substr(0, loc);
+			read_buffer = read_buffer.substr(loc + 1, read_buffer.size() - loc);
+		}
 	}
 	return (res);
 }
