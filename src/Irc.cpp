@@ -258,12 +258,19 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 	}
 	if (client->isRegistered()) // RPL_001_rpl_welcome
 	{
-		if (password.empty() || password.compare(client->getPassword()))
+		std::cerr << "[" << password << "]" << std::endl;
+		std::cerr << "[" << client->getPassword() << "]" << std::endl;
+		if (password.empty() || !password.compare(client->getPassword()))
 		{
 			std::vector<int> fds;
 			fds.push_back(client->getFd());
 			_setSendEvent(false, true, false, true, fds);
 			client->addWrite_buffer(_001_rpl_welcome(SERVERURL, client->getNickname(), client->makeClientPrefix()));
+		}
+		else
+		{
+			_clearSendEvent();
+			client->setLife(false);
 		}
 	}
 	return (SUCCESS);
@@ -861,6 +868,7 @@ int Irc::__cmd_topic(Client *client, IRCMessage message)
 			{
 				// 동작 - timestamp
 				std::vector<std::string>::iterator param_iter = message.parameters.begin();
+				param_iter++;
 				std::string topic = *param_iter;
 				param_iter++;
 				for (; param_iter != message.parameters.end() ; param_iter++)
@@ -1118,6 +1126,7 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 										_setSendEvent(true, true, false, true, fds);
 									}
 								}
+								param_iter++;
 								break ;
 							case 2: // limit
 								if (param_iter == message.parameters.end())
@@ -1145,6 +1154,7 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									}
 									_setSendEvent(true, true, false, true, fds);
 								}
+								param_iter++;
 								break ;
 							case 3: // invite
 								if (!(flag == chan->getOptionInvite()))
