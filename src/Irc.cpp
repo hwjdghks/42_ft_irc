@@ -152,7 +152,7 @@ t_send_event Irc::quit(int fd, const char *msg)
 			}
 	}
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
-	_setSendEvent(true, false, true, true, fds);
+	_setSendEvent(false, false, false, true, fds);
 	deleteClient(fd);
 	return (send_msg);
 }
