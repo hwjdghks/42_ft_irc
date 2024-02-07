@@ -25,7 +25,6 @@ bool Server::pasreAndSetArguements(const char * const * argv)
 		if (!std::isprint(*iter))
 			return false;
 	this->password = std::string(argv[2]);
-	control.setPassword(argv[2]);
 	return true;
 }
 
