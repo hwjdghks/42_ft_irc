@@ -684,9 +684,12 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 						msg = msg + " " + *param_iter;
 					}
 
-					if (target_client->isAlive())
-							fds.push_back(target_client->getFd());
-					client->addWrite_buffer(client->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + msg + "\r\n");
+					if (client != target_client)
+					{
+						if (target_client->isAlive())
+								fds.push_back(target_client->getFd());
+						target_client->addWrite_buffer(client->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + msg + "\r\n");
+					}
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
 				}
