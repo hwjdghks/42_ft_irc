@@ -56,12 +56,15 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 	{
 		// 명령줄 받아보기
 		commandLine = client->getLineOfRead_buffer();
+//		std::cerr << "!    cmdline    [" << commandLine << "]" << std::endl;
 		// 만약 문자열이 공백이라면 loop 종료
 		if (commandLine.empty())
 			break ;
+//		std::cerr << "!    execute    [" << commandLine << "]" << std::endl;
 		// 리시브 메세지 해석
 		IRCMessage recv_msg = parseMessage(commandLine);
 		// 명령어에 따라 동작하기
+//		std::cerr << "    cmd    [" << recv_msg.command << "]" << std::endl;
 		if (!client->isRegistered())
 			_register_executor(client, recv_msg);
 		else
@@ -131,6 +134,7 @@ t_send_event Irc::quit(int fd, const char *msg)
 	_clearSendEvent();
 	// 해당 fd의 클라이언트를 찾는다
 	Client *client = searchClient(fd);
+	client->setLife(false);
 	std::vector<int> fds;
 	// 해당 클라이언트가 속한 채널의 유저들을 찾는다
 	std::vector<Channel *> &channels = client->getChannels();
@@ -149,7 +153,7 @@ t_send_event Irc::quit(int fd, const char *msg)
 	}
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
 	_setSendEvent(true, false, true, true, fds);
-	client->setLife(false);
+	deleteClient(fd);
 	return (send_msg);
 }
 
