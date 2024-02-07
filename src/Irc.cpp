@@ -680,7 +680,7 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 		fds.push_back(client->getFd());
 	_setSendEvent(true, false, false, true, fds);
 
-	if (message.parameters.size() < 2) // RPL 461
+	if (message.parameters.size() < 1) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else
 	{
