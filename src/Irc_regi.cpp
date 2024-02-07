@@ -189,9 +189,14 @@ std::vector<std::string> Irc::__getTargets(const std::string &stargets)
 	std::stringstream ss(stargets);
 	std::string starget;
 
-	 while (std::getline(ss, starget, ',')) {
-        targets.push_back(starget);
-    }
-
+	if (stargets.size() > 0 && std::string::npos == stargets.find(','))
+		targets.push_back(stargets);
+	else
+	{
+		while (std::getline(ss, starget, ',')) 
+		{
+			targets.push_back(starget);
+		}
+	}
 	return targets;
 }
