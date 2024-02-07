@@ -145,7 +145,7 @@ bool Client::isRegistered(void)
 
 std::string Client::makeClientPrefix() const
 {
-    return this->getNickname() + "!" + \
+    return ":" + this->getNickname() + "!" + \
            this->getUsername() + "@" + \
            this->getHostname();
 }

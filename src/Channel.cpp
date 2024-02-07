@@ -13,6 +13,7 @@ Channel::Channel(void) {
 	bot.setRealname("RoBoT");
 	bot.setBot(true);
 	bot.setLife(false);
+	bot.setFd(-1);
 	users.push_back(&bot);
 }
 

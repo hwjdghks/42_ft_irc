@@ -427,6 +427,7 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 					// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
 					if ((*cl_it)->isAlive())
 						fds.push_back((*cl_it)->getFd());
+					std::cout << "    [" << (*cl_it)->getFd() << "]\n";
 					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
 				}
 			}
@@ -663,8 +664,10 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 			}
 			else
 			{
-				if (__isValidNick(*target_iter)) // RPL_432_err_erroneusnickname
+				if (!__isValidNick(*target_iter)) // RPL_432_err_erroneusnickname
 					client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), *target_iter));
+				else if (!isExistingClient(*target_iter))
+					client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), *target_iter));
 				else
 				{
 					// 동작
@@ -792,7 +795,7 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 		fds.push_back(client->getFd());
 	_setSendEvent(true, false, true, true, fds);
 
-	if (message.parameters.size() < 2) // RPL 461
+	if (message.parameters.size() < 1) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 	else
 	{
@@ -813,7 +816,7 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 				{
 					// 동작 - message 제작
 					std::vector<std::string>::iterator param_iter = message.parameters.begin();
-					std::string msg = *param_iter;
+					std::string msg;
 					param_iter++;
 					for (; param_iter != message.parameters.end() ; param_iter++)
 						msg = msg + " " + *param_iter;
