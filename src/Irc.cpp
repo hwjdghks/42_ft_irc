@@ -649,13 +649,13 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 					std::vector<Client *> client_list = chan->getUsers();
 					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 					{
-						if (!(*cl_it)->isBot())
+						if (!(*cl_it)->isBot() && client != *cl_it)
 						{
 							// 각 클라이언트의 fd를 저장
 							// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
 							if ((*cl_it)->isAlive())
 								fds.push_back((*cl_it)->getFd());
-							client->addWrite_buffer(reply_msg);
+							(*cl_it)->addWrite_buffer(reply_msg);
 						}
 					}
 					_setSendEvent(true, true, false, true, fds);
