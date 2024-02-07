@@ -258,10 +258,15 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 	}
 	if (client->isRegistered()) // RPL_001_rpl_welcome
 	{
-		std::vector<int> fds;
-		fds.push_back(client->getFd());
-		_setSendEvent(false, true, false, true, fds);
-		client->addWrite_buffer(_001_rpl_welcome(SERVERURL, client->getNickname(), client->makeClientPrefix()));
+		if (password.empty() || password.compare(client->getPassword()))
+		{
+			std::vector<int> fds;
+			fds.push_back(client->getFd());
+			_setSendEvent(false, true, false, true, fds);
+			client->addWrite_buffer(_001_rpl_welcome(SERVERURL, client->getNickname(), client->makeClientPrefix()));
+		}
+		else
+			deleteClient(client->getFd());
 	}
 	return (SUCCESS);
 }
