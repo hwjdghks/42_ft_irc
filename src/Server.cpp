@@ -105,11 +105,8 @@ void Server::run(void)
 					else
 					{
 						/* client socket error */
-						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
-						if (!setReplyEventToClient(current_event->ident, result))
+						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
 							return this->stop();
-						delTimerEvent(current_event->ident);
-						close(current_event->ident);
 					}
 					continue ;
 				}
@@ -126,12 +123,8 @@ void Server::run(void)
 					if (current_event->flags & EV_EOF) /* peer connect close */
 					{
 						std::cout << DEBUGMSG "READ ERROR\n";
-						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
-						if (!setReplyEventToClient(current_event->ident, result))
+						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
 							return this->stop();
-						delTimerEvent(current_event->ident);
-						close(current_event->ident);
-						continue ;
 					}
 					if (!recvMsg(current_event->ident))
 						return this->stop();
@@ -145,12 +138,8 @@ void Server::run(void)
 						std::cout << DEBUGMSG "WRITE ERROR\n";
 						/* write event error */
 						/* socket close */
-						t_send_event result = control.quit(current_event->ident, MSG_FAIL_SYSTEM);
-						if (!setReplyEventToClient(current_event->ident, result))
+						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
 							return this->stop(); /* kevent error */
-						delTimerEvent(current_event->ident);
-						close(current_event->ident);
-						continue ;
 					}
 					if (!sendMsg(current_event->ident, current_event->udata))
 						return this->stop();

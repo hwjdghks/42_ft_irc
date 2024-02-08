@@ -105,17 +105,11 @@ bool Server::recvMsg(const int &fd)
 	std::memset(buf, 0, BUFSIZE);
 	ssize_t size = recv(fd, buf, BUFSIZE - 1, 0);
 	if (size == -1)
-	{
-		if (!this->setReplyEventToClient(fd, control.quit(fd, MSG_FAIL_SYSTEM)))
-			return false;
-		return true;
-	}
+		return closeClient(fd, MSG_FAIL_SYSTEM);
 	buf[size] = '\0';
 	t_send_event change_list = control.executeCommand(fd, std::string(buf));
 
-	if (!this->setReplyEventToClient(fd, change_list))
-		return false;
-	return true;
+	return this->setReplyEventToClient(fd, change_list);
 }
 
 /*
@@ -138,11 +132,7 @@ bool Server::sendMsg(const int &fd, void *udata)
 	std::string buf = sender->getWrite_buffer(/* 버퍼를 받음. 버퍼 내부는 비워짐 */);
 	ssize_t len = send(fd, buf.c_str(), buf.size(), 0);
 	if (len == -1)
-	{
-		if (!this->setReplyEventToClient(fd, control.quit(fd, MSG_FAIL_SYSTEM)))
-			return false;
-		return true;
-	}
+		return closeClient(fd, MSG_FAIL_SYSTEM);
 	if (static_cast<std::size_t>(len) < buf.size())
 	{
 		/* 
@@ -175,13 +165,8 @@ bool Server::handleTimerEvent(const int &fd, void *udata)
 	case UDATA_CHECK_REIGISTER: /* 등록 시간제한이 지났을 경우 */
 		client = control.searchClient(fd);
 		if (client && (!client->isAlive() || !client->isRegistered()))
-		{
-			event = control.quit(fd, MSG_FAIL_REGISTER);
-			if (!this->setReplyEventToClient(fd, event))
+			if (!closeClient(fd, MSG_FAIL_REGISTER))
 				return false;
-			delTimerEvent(fd);
-			close(fd);
-		}
 		break;
 	case UDATA_CHECK_CONNECT: /* ping을 보내야 함 */
 		event = control.ping(fd);
@@ -190,11 +175,8 @@ bool Server::handleTimerEvent(const int &fd, void *udata)
 		addTimerEvent(fd, TIMEOUT_CONNECT, UDATA_LOST_CONNECT);
 		break;
 	case UDATA_LOST_CONNECT: /* ping에 응답이 없을 경우 */
-		event = control.quit(fd, MSG_FAIL_TIMEOUT);
-		if (!this->setReplyEventToClient(fd, event))
+		if (!closeClient(fd, MSG_FAIL_TIMEOUT))
 			return false;
-		delTimerEvent(fd);
-		close(fd);
 		break;
 	default:
 		break;
@@ -344,6 +326,15 @@ bool Server::closeKqueue(void) const
 {
 	close(this->kq);
 	return false;
+}
+
+bool Server::closeClient(int fd, const char *msg)
+{
+	if (!setReplyEventToClient(fd, control.quit(fd, msg)))
+		return false;
+	delTimerEvent(fd);
+	close(fd);
+	return true;
 }
 
 void Server::stop(void)
