@@ -757,6 +757,7 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 				else
 				{
 					// 일반 유저로 가입
+					chan->addUser(client);
 					client->addChannel(chan);
 					std::vector<Client *> client_list = chan->getUsers();
 					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
@@ -766,12 +767,13 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 							// 각 클라이언트의 fd를 저장
 							// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
 							if ((*cl_it)->isAlive())
+							{
 								fds.push_back((*cl_it)->getFd());
-							client->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter + "\r\n");
+								(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter + "\r\n");
+							}
 						}
 					}
 					// 채널에 유저 추가
-					chan->addUser(client);
 					chan->delInvite(client->getNickname());
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
