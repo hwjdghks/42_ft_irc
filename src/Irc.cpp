@@ -757,6 +757,7 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 				else
 				{
 					// 일반 유저로 가입
+					client->addChannel(chan);
 					std::vector<Client *> client_list = chan->getUsers();
 					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 					{
