@@ -737,6 +737,10 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					client->addChannel(searchChannel(*chan_iter));
 				}
 				client->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter + "\r\n");
+
+				Channel *chan = searchChannel(*chan_iter);
+				client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " = " + chan->getName() + " :@" + client->getNickname() + "\r\n");
+				client->addWrite_buffer(SERVERURL " 366 " + client->getNickname() + " " + chan->getName() + " :End of /NAMES list." + "\r\n");
 				_setSendEvent(true, true, false, true, fds);
 				fds.clear();
 			}
@@ -757,6 +761,7 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					// 일반 유저로 가입
 					chan->addUser(client);
 					client->addChannel(chan);
+					std::string chan_users;
 					std::list<Client *> client_list = chan->getUsers();
 					for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 					{
@@ -768,11 +773,17 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 							{
 								fds.push_back((*cl_it)->getFd());
 								(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter + "\r\n");
+								if (chan->isOperator((*cl_it)->getNickname()))
+									chan_users += "@" + (*cl_it)->getNickname() + " ";
+								else
+									chan_users += (*cl_it)->getNickname() + " ";
 							}
 						}
 					}
-					// 채널에 유저 추가
+					// 초대 리스트에서 삭제
 					chan->delInvite(client->getNickname());
+					client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " = " + chan->getName() + " :" + chan_users + "\r\n");
+					client->addWrite_buffer(SERVERURL " 366 " + client->getNickname() + " " + chan->getName() + " :End of /NAMES list." + "\r\n");
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
 				}
@@ -790,6 +801,25 @@ join #aa
 :penguin.omega.example.org 366 nick #aa :End of /NAMES list.
 :kiryud!jeongjinse@127.0.0.1 JOIN :#aa
 :jijeong!jeongjinse@127.0.0.1 JOIN :#aa
+*/
+/* irssi는 어떻게 유저와 오퍼레이터를 기록할 수 있었는지에 대한 해답
+join #asdf
+:aaaa!a@localhost JOIN :#asdf
+:penguin.omega.example.org 353 aaaa = #asdf :@aaaa
+:penguin.omega.example.org 366 aaaa #asdf :End of /NAMES list.
+
+join #asdf
+:aaaa!a@localhost JOIN :#asdf
+:penguin.omega.example.org 353 aaaa = #asdf :aaaa @nickname_ nickname
+:penguin.omega.example.org 366 aaaa #asdf :End of /NAMES list.
+
+part #asdf
+:aaaa!a@localhost PART :#asdf
+
+join #asdf
+:aaaa!a@localhost JOIN :#asdf
+:penguin.omega.example.org 353 aaaa = #asdf :aaaa @nickname_ @nickname
+:penguin.omega.example.org 366 aaaa #asdf :End of /NAMES list.
 */
 
 int Irc::__cmd_part(Client *client, IRCMessage message)
