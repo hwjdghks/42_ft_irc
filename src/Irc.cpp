@@ -986,22 +986,22 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 
 	if (message.parameters.size() < 2) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else if (!__isValidChannelName(message.parameters[0])) // RPL 476
-		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
-	else if (!isExistingChannel(message.parameters[0])) // RPL 403
-		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
+	else if (!__isValidChannelName(message.parameters[1])) // RPL 476
+		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[1]));
+	else if (!isExistingChannel(message.parameters[1])) // RPL 403
+		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[1]));
 	else
 	{
 		std::list<Channel>::iterator iter;
 		for (iter = channels.begin(); iter != channels.end() ; iter++)
-			if (iter->getName() == message.parameters[0])
+			if (iter->getName() == message.parameters[1])
 				break ;
 		if (!iter->isUser(client->getNickname())) // RPL 442
-			client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), message.parameters[0]));
-		else if (!isExistingClient(message.parameters[1])) // RPL 401
+			client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), message.parameters[1]));
+		else if (!isExistingClient(message.parameters[0])) // RPL 401
 			client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), message.parameters[1]));
 		else if (!iter->isOperator(client->getNickname())) // RPL 482
-			client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[0]));
+			client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), client->getNickname()));
 		else
 		{
 			// 동작 - timestamp
@@ -1013,14 +1013,14 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 				{
 					if ((*cl_it)->isAlive())
 						fds.push_back((*cl_it)->getFd());
-					(*cl_it)->addWrite_buffer(_341_rpl_inviting(SERVERURL, client->getNickname(), iter->getName(), message.parameters[1]));
+					(*cl_it)->addWrite_buffer(_341_rpl_inviting(SERVERURL, client->getNickname(), iter->getName(), message.parameters[0]));
 				}
 			}
 			// 해당 유저에게 초대 메세지 보내기
-			Client *tmp_client = searchClient(message.parameters[1]);
+			Client *tmp_client = searchClient(message.parameters[0]);
 			if ((tmp_client)->isAlive())
 				fds.push_back((tmp_client)->getFd());
-			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + " INVITE " + tmp_client->getNickname() + " :" + message.parameters[0] + "\r\n");
+			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + " INVITE " + tmp_client->getNickname() + " :" + message.parameters[1] + "\r\n");
 			// 해당 유저를 channel invited에 추가
 			iter->addInvite(tmp_client);
 			_setSendEvent(true, true, false, true, fds);
@@ -1171,28 +1171,33 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 								else if (!(flag == chan->getOptionLimit()))
 								{
 									double num = std::strtod((*param_iter).c_str(), NULL);
-									chan->setLimit(static_cast<size_t>(num));
-									chan->setOptionLimit(flag);
-									std::string rplmsg;
-									if (flag)
-									{
-										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +l :" + *param_iter + "\r\n";
-									}
+									if (std::string::npos != (*param_iter).find_first_not_of("0123456789") || 0 == num)
+										client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), ""));
 									else
 									{
-										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -l :" + *param_iter + "\r\n";
-									}
-									std::list<Client *> client_list = chan->getUsers();
-									for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
-									{
-										if (!(*cl_it)->isBot())
+										chan->setLimit(static_cast<size_t>(num));
+										chan->setOptionLimit(flag);
+										std::string rplmsg;
+										if (flag)
 										{
-											if ((*cl_it)->isAlive())
-												fds.push_back((*cl_it)->getFd());
-											(*cl_it)->addWrite_buffer(rplmsg);
+											rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +l :" + *param_iter + "\r\n";
 										}
+										else
+										{
+											rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -l :" + *param_iter + "\r\n";
+										}
+										std::list<Client *> client_list = chan->getUsers();
+										for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+										{
+											if (!(*cl_it)->isBot())
+											{
+												if ((*cl_it)->isAlive())
+													fds.push_back((*cl_it)->getFd());
+												(*cl_it)->addWrite_buffer(rplmsg);
+											}
+										}
+										_setSendEvent(true, true, false, true, fds);
 									}
-									_setSendEvent(true, true, false, true, fds);
 								}
 								param_iter++;
 								break ;
