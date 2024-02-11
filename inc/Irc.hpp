@@ -10,8 +10,8 @@ class Irc
 private:
 	t_send_event			send_msg;
 	std::string				password;
-	std::vector<Client>		clients;
-	std::vector<Channel>	channels;
+	std::list<Client>		clients;
+	std::list<Channel>	channels;
 public:
 	Irc();
 	Irc(const Irc &ref);
