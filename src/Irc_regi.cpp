@@ -40,7 +40,7 @@ bool Irc::__isValidNick(const std::string &nick)
 
 bool Irc::_isNickInUse(Client* cur_client, std::string to_be_nick)
 {
-	for (std::list<Client>::iterator it = clients.begin(); it < clients.end(); it++)
+	for (std::list<Client>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (cur_client->getFd() == it->getFd())
 			continue;
@@ -205,7 +205,7 @@ IRCMessage Irc::parseMessage(std::string message)
 bool Irc::isExistingClient(std::string clName)
 {
 	std::list<Client>::iterator it;
-	for(it = clients.begin(); it < clients.end(); it++)
+	for(it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->getNickname() == clName)
 			return true;
@@ -216,7 +216,7 @@ bool Irc::isExistingClient(std::string clName)
 bool Irc::isExistingChannel(std::string chName)
 {
 	std::list<Channel>::iterator it;
-	for(it = channels.begin(); it < channels.end(); it++)
+	for(it = channels.begin(); it != channels.end(); it++)
 	{
 		if (it->getName() == chName)
 			return true;
