@@ -56,11 +56,11 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 	{
 		// 명령줄 받아보기
 		commandLine = client->getLineOfRead_buffer();
-		std::cerr << "!    cmdline    [" << commandLine << "]" << std::endl;
+		std::cerr << "!    cmdline    [" << commandLine << "][" << commandLine.size() << "]" << std::endl;
 		// 만약 문자열이 공백이라면 loop 종료
 		if (commandLine.empty())
 			break ;
-		std::cerr << "!    execute    [" << commandLine << "]" << std::endl;
+		std::cerr << "!    execute    [" << commandLine << "][" << commandLine.size() << "]" << std::endl;
 		// 리시브 메세지 해석
 		IRCMessage recv_msg = parseMessage(commandLine);
 		// 명령어에 따라 동작하기
@@ -258,8 +258,6 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 	}
 	if (client->isRegistered()) // RPL_001_rpl_welcome
 	{
-		std::cerr << "[" << password << "]" << std::endl;
-		std::cerr << "[" << client->getPassword() << "]" << std::endl;
 		if (password.empty() || !password.compare(client->getPassword()))
 		{
 			std::vector<int> fds;
@@ -1000,7 +998,7 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 				break ;
 		if (!iter->isUser(client->getNickname())) // RPL 442
 			client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), message.parameters[0]));
-		else if (!iter->isUser(message.parameters[1])) // RPL 401
+		else if (!isExistingClient(message.parameters[1])) // RPL 401
 			client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), message.parameters[1]));
 		else if (!iter->isOperator(client->getNickname())) // RPL 482
 			client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[0]));
