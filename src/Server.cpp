@@ -117,7 +117,7 @@ void Server::run(void)
 						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
 							return this->stop();
 					}
-					if (!recvMsg(current_event->ident))
+					else if (!recvMsg(current_event->ident))
 						return this->stop();
 				}
 				else if (current_event->filter == EVFILT_WRITE)
@@ -132,7 +132,7 @@ void Server::run(void)
 						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
 							return this->stop(); /* kevent error */
 					}
-					if (!sendMsg(current_event->ident, current_event->udata))
+					else if (!sendMsg(current_event->ident, current_event->udata))
 						return this->stop();
 				}
 				else if (current_event->filter == EVFILT_TIMER)
@@ -140,7 +140,13 @@ void Server::run(void)
 					std::cout << DEBUGMSG "TIMEOUT\n";
 					this->printData(current_event);
 					/* register, connect 등 이벤트 처리 */
-					if (!handleTimerEvent(current_event->ident, current_event->udata))
+					if (current_event->flags & EV_EOF) /* peer connect close */
+					{
+						std::cout << DEBUGMSG "TIMEOUT ERROR\n";
+						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
+							return this->stop();
+					}
+					else if (!handleTimerEvent(current_event->ident, current_event->udata))
 						return this->stop();
 				}
 			} /* each event handling end */
