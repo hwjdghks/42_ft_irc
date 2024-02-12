@@ -23,10 +23,10 @@
 #define UDATA_FAIL_REGISTER 6
 
 /* 클라이언트 종료시 종료 이유를 보낼 다잉 메세지 */
-#define MSG_FAIL_JOIN_SERVER "Server is full"
-#define MSG_FAIL_REGISTER "Register timeout"
-#define MSG_FAIL_TIMEOUT "Connection lost"
-#define MSG_FAIL_SYSTEM "System call error"
+#define MSG_FAIL_JOIN_SERVER "ircserv: Server is full\r\n"
+#define MSG_FAIL_REGISTER "ircserv: Register timeout\r\n"
+#define MSG_FAIL_TIMEOUT "ircserv: Connection lost\r\n"
+#define MSG_FAIL_SYSTEM "ircserv: System call error\r\n"
 
 # define SUCCESS 1
 # define FAIL 0
