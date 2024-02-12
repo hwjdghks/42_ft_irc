@@ -1261,9 +1261,10 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), *param_iter));
 								else if (!chan->isOperator(*param_iter))
 								{
-									chan->addOperator(searchClient(*param_iter));
+									Client *new_op = searchClient(*param_iter);
+									chan->addOperator(new_op);
 									std::string rplmsg;
-									rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +o :" + client->getNickname() + "\r\n";
+									rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +o :" + new_op->getNickname() + "\r\n";
 									std::list<Client *> client_list = chan->getUsers();
 									for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 									{
