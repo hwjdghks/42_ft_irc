@@ -510,9 +510,9 @@ int Irc::__cmd_who(Client *client, IRCMessage message)
 		{
 			// RPL_352_rpl_whoreply
 			if (chan->isOperator((*cl_it)->getNickname()))
-				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, client->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "@", (*cl_it)->getRealname()));
+				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "@", (*cl_it)->getRealname()));
 			else
-				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, client->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "", (*cl_it)->getRealname()));
+				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "", (*cl_it)->getRealname()));
 		}
 		// RPL_315_rpl_endofwho
 		client->addWrite_buffer(_315_rpl_endofwho(SERVERURL, client->getNickname(), message.parameters[0]));
@@ -528,34 +528,44 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 		fds.push_back(client->getFd());
 	_setSendEvent(true, false, false, true, fds);
 
-	std::list<Channel *> &channels = client->getChannels();
-	for (std::list<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+	std::list<Channel *> &chans = client->getChannels();
+	for (std::list<Channel *>::iterator it = chans.begin(); it != chans.end(); it++)
 	{
-		Channel *curr_ch = *it;
-		std::list<Client *> client_list = curr_ch->getUsers();
+		Channel *chan = *it;
+		std::list<Client *> client_list = chan->getUsers();
 		for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
-	// 해당 유저들의 fd를 t_send_event에 넣는다
-			if ((*cl_it)->getFd() != client->getFd())
+		{
+			if ((*cl_it)->getFd() != client->getFd() && (*cl_it)->isAlive() && !(*cl_it)->isBot())
 			{
-				if ((*cl_it)->isAlive())
-					fds.push_back((*cl_it)->getFd());
+				fds.push_back((*cl_it)->getFd());
 				if (message.parameters.size() == 0)
 					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " QUIT :Quit: " + QUITMSG + "\r\n");
 				else
 				{
-					if (!(*cl_it)->isBot())
+					std::vector<std::string>::iterator iter = message.parameters.begin();
+					std::string msg = *iter;
+					for (; iter != message.parameters.end() ; iter++)
 					{
-						std::vector<std::string>::iterator iter = message.parameters.begin();
-						std::string msg = *iter;
-						iter++;
-						for (; iter != message.parameters.end() ; iter++)
-						{
-							msg = msg + " " + *iter;
-						}
-						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " QUIT :Quit: " + msg + "\r\n");
+						msg = msg + " " + *iter;
 					}
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " QUIT :Quit: " + msg + "\r\n");
 				}
 			}
+		}
+	}
+	{
+		std::list<Channel *> &chans = client->getChannels();
+		Channel *chan = *(chans.begin());
+		for (chan = *(chans.begin()) ; chan != *(chans.end()) ; chan = *(chans.begin()))
+		{
+			// 채널에서 삭제
+			chan->delOperator(client->getNickname());
+			chan->delUser(client->getNickname());
+			client->delChannel(chan->getName());
+			// 채널 삭제
+			if ((chan->getUsers()).size() == 0)
+				delChannel(chan->getName());
+		}
 	}
 	// write buffer에 PING 메세지를 넣고 t_send_event 반환
 	_setSendEvent(true, false, true, true, fds);
