@@ -36,7 +36,7 @@ re:
 	make fclean
 	make all
 
-server:
+server: re
 	./ircserv 16667 password
 
 client:

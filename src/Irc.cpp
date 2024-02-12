@@ -510,9 +510,9 @@ int Irc::__cmd_who(Client *client, IRCMessage message)
 		{
 			// RPL_352_rpl_whoreply
 			if (chan->isOperator((*cl_it)->getNickname()))
-				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "@", (*cl_it)->getRealname()));
+				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(),  (*cl_it)->getNickname(), "@", (*cl_it)->getRealname()));
 			else
-				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "", (*cl_it)->getRealname()));
+				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(),  (*cl_it)->getNickname(), "", (*cl_it)->getRealname()));
 		}
 		// RPL_315_rpl_endofwho
 		client->addWrite_buffer(_315_rpl_endofwho(SERVERURL, client->getNickname(), message.parameters[0]));
@@ -1328,10 +1328,7 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 			}
 			for (; opt_iter != options.end() ; opt_iter++)
 			{
-				if (*opt_iter == 'i')
-					client->addWrite_buffer(SERVERURL " 221 " + message.parameters[0] + " :" + *opt_iter + "\r\n");
-				else
-					client->addWrite_buffer(SERVERURL " 501 " + message.parameters[0] + *opt_iter + ":is not a recognised user mode." + "\r\n");
+				client->addWrite_buffer(SERVERURL " 501 " + message.parameters[0] + " " + *opt_iter + ":is not a recognised user mode." + "\r\n");
 			}
 		}
 		else //502
