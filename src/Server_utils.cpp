@@ -142,16 +142,10 @@ bool Server::sendMsg(const int &fd, void *udata)
 		 */
 		sender->rollbackBuf(buf/* 가져온 원본 버퍼 */, len/* 복사가 완료된 영역의 크기 */);
 	}
-	else
-		if (!offWriteEvnet(fd))
-			return false;
+	else if (!offWriteEvnet(fd))
+		return false;
 	if ((!sender->isAlive())) /* 클라이언트를 종료시켜야할 경우 */
-	{
-		if (!this->setReplyEventToClient(fd, control.deleteClient(fd)))
-			return false;
-		delTimerEvent(fd);
-		close(fd);
-	}
+		return closeClient(fd);
 	return true;
 }
 
@@ -327,6 +321,15 @@ bool Server::closeKqueue(void) const
 {
 	close(this->kq);
 	return false;
+}
+
+bool Server::closeClient(int fd)
+{
+	if (!setReplyEventToClient(fd, control.deleteClient(fd)))
+		return false;
+	delTimerEvent(fd);
+	close(fd);
+	return true;
 }
 
 bool Server::closeClient(int fd, const char *msg)
