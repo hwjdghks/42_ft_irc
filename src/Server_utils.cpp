@@ -1,7 +1,4 @@
 #include "Server.hpp"
-/* Dubug Header */
-#include <iostream>
-/* Debug Header end */
 
 /************************************************************
  *															*
@@ -129,19 +126,12 @@ bool Server::sendMsg(const int &fd, void *udata)
 		return true;
 
 	Client *sender = control.searchClient(fd);
-	std::string buf = sender->getWrite_buffer(/* 버퍼를 받음. 버퍼 내부는 비워짐 */);
+	std::string buf = sender->getWrite_buffer();
 	ssize_t len = send(fd, buf.c_str(), buf.size(), 0);
 	if (len == -1)
 		return closeClient(fd, MSG_FAIL_SYSTEM);
 	if (static_cast<std::size_t>(len) < buf.size())
-	{
-		/* 
-		 * need buffer roll back 
-		 * size는 버퍼에 카피한 사이즈.
-		 * 해당 사이즈를 제외한 나머지를 롤백해야함.
-		 */
-		sender->rollbackBuf(buf/* 가져온 원본 버퍼 */, len/* 복사가 완료된 영역의 크기 */);
-	}
+		sender->rollbackBuf(buf, len);
 	else if (!offWriteEvnet(fd))
 		return false;
 	if ((!sender->isAlive())) /* 클라이언트를 종료시켜야할 경우 */
@@ -350,19 +340,3 @@ void Server::stop(void)
 	close(kq);
 	close(server_fd);
 }
-
-/************************************************************
- *															*
- *						DEBUG Function						*
- * 															*
- ************************************************************/
-
-/* Debug code */
-void Server::printData(struct kevent *e) const
-{
-	std::cout << "flags: " << e->flags << '\n';
-	std::cout << "fflags : " << e->fflags << '\n';
-	std::cout << "data : " << e->data << '\n';
-	std::cout << "udata: " << e->udata << '\n';
-}
-/* Debug code end */
