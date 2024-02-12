@@ -22,6 +22,7 @@ Client &Client::operator=(const Client &ref)
 		return *this;
 	/* Edit */
 	this->fd = ref.fd;
+	this->bot = ref.bot;
 	this->life = ref.life;
 	this->regi[PASS] = ref.regi[PASS];
 	this->regi[NICK] = ref.regi[NICK];
