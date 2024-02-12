@@ -62,6 +62,7 @@ private: /* manage kevent */
 private: /* error handling */
 	bool closeServerSocket(void) const;
 	bool closeKqueue(void) const;
+	bool closeClient(int fd);
 	bool closeClient(int fd, const char *msg);
 	void stop(void);
 

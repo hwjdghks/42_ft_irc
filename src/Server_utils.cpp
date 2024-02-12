@@ -146,12 +146,7 @@ bool Server::sendMsg(const int &fd, void *udata)
 		if (!offWriteEvnet(fd))
 			return false;
 	if ((!sender->isAlive())) /* 클라이언트를 종료시켜야할 경우 */
-	{
-		if (!this->setReplyEventToClient(fd, control.deleteClient(fd)))
-			return false;
-		delTimerEvent(fd);
-		close(fd);
-	}
+		return closeClient(fd);
 	return true;
 }
 
@@ -327,6 +322,15 @@ bool Server::closeKqueue(void) const
 {
 	close(this->kq);
 	return false;
+}
+
+bool Server::closeClient(int fd)
+{
+	if (!setReplyEventToClient(fd, control.deleteClient(fd)))
+		return false;
+	delTimerEvent(fd);
+	close(fd);
+	return true;
 }
 
 bool Server::closeClient(int fd, const char *msg)
