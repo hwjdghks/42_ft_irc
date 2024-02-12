@@ -62,55 +62,52 @@ void Server::run(void)
 		int new_events_count = kevent(kq, NULL, 0, &event_list[0], MAX_CLIENT + 1, NULL);
 		if (new_events_count == -1)
 			return this->stop();
-		else
+		for (int idx = 0; idx < new_events_count; idx++)
 		{
-			for (int idx = 0; idx < new_events_count; idx++)
+			struct kevent *current_event = &event_list[idx];
+			if (current_event->flags & EV_ERROR)
 			{
-				struct kevent *current_event = &event_list[idx];
-				if (current_event->flags & EV_ERROR)
-				{
-					if (current_event->ident == static_cast<uintptr_t>(this->server_fd))
-						return this->stop();
-					else if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
-						return this->stop();
-					continue ;
-				}
 				if (current_event->ident == static_cast<uintptr_t>(this->server_fd))
+					return this->stop();
+				else if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
+					return this->stop();
+				continue ;
+			}
+			if (current_event->ident == static_cast<uintptr_t>(this->server_fd))
+			{
+				if (!setNewClientSocket())
+					return this->stop();
+			}
+			else if (current_event->filter == EVFILT_READ)
+			{
+				if (current_event->flags & EV_EOF) /* peer connect close */
 				{
-					if (!setNewClientSocket())
+					if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
 						return this->stop();
 				}
-				else if (current_event->filter == EVFILT_READ)
+				else if (!recvMsg(current_event->ident))
+					return this->stop();
+			}
+			else if (current_event->filter == EVFILT_WRITE)
+			{
+				if (current_event->flags & EV_EOF) /* peer connect close */
 				{
-					if (current_event->flags & EV_EOF) /* peer connect close */
-					{
-						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
-							return this->stop();
-					}
-					else if (!recvMsg(current_event->ident))
+					if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
+						return this->stop(); /* kevent error */
+				}
+				else if (!sendMsg(current_event->ident, current_event->udata))
+					return this->stop();
+			}
+			else if (current_event->filter == EVFILT_TIMER)
+			{
+				if (current_event->flags & EV_EOF) /* peer connect close */
+				{
+					if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
 						return this->stop();
 				}
-				else if (current_event->filter == EVFILT_WRITE)
-				{
-					if (current_event->flags & EV_EOF) /* peer connect close */
-					{
-						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
-							return this->stop(); /* kevent error */
-					}
-					else if (!sendMsg(current_event->ident, current_event->udata))
-						return this->stop();
-				}
-				else if (current_event->filter == EVFILT_TIMER)
-				{
-					if (current_event->flags & EV_EOF) /* peer connect close */
-					{
-						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
-							return this->stop();
-					}
-					else if (!handleTimerEvent(current_event->ident, current_event->udata))
-						return this->stop();
-				}
-			} /* each event handling end */
-		} /* kevent case end */
-	} /* infinite loop end */
-}
+				else if (!handleTimerEvent(current_event->ident, current_event->udata))
+					return this->stop();
+			}
+		} /* each event handling end */
+	} /* kevent case end */
+} /* infinite loop end */
