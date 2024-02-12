@@ -388,7 +388,6 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 	else
 	{
 		// 동작 timestamp
-		client->setNickname(message.parameters[0]);
 		// client가 소속된 channel의 모든 유저에게 전송
 		// current client의 channel size만큼 반복
 		std::list<Channel *> &channels = client->getChannels();
@@ -411,6 +410,7 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 				}
 			}
 		}
+		client->setNickname(message.parameters[0]);
 		// 해당 유저들의 fd를 t_send_event에 넣는다
 		_setSendEvent(true, true, false, true, fds);
 	}
