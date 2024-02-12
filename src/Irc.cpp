@@ -246,6 +246,19 @@ Channel *Irc::searchChannel(const std::string &channelname)
 	return (channel);
 }
 
+int Irc::delChannel(std::string name)
+{
+	std::list<Channel>::iterator it;
+
+	for (it = channels.begin() ; it != channels.end() ; it++)
+	{
+		if (it->getName().compare(name) == 0)
+			break ;
+	}
+	channels.erase(it);
+	return (SUCCESS);
+}
+
 int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 {
 	if (recv_msg.command == "USER")
@@ -279,44 +292,6 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 	}
 	return (SUCCESS);
 }
-
-/* Irc_regi.cpp에서 구현됨
-동작의 정의가 있는 부분이라 일단 주석 처리만 해 둔 상태
-추후 동작 확인할 때 사용하고 확인이 완료되어 필요성이 사라진다면 삭제 요망
-
-int Irc::__register_user(Client *client, IRCMessage message)
-{
-	if (param 부족함)
-		// RPL_461_err_needmoreparams
-	else if (기존 데이터 존재함)
-		// RPL_462_err_alreadyregisterd
-	else
-		// 동작
-	return (SUCCESS);
-}
-
-int Irc::__register_pass(Client *client, IRCMessage message)
-{
-	if (param 없음)
-		// RPL_461_err_needmoreparams
-	else
-		// 동작
-	return (SUCCESS);
-}
-
-int Irc::__register_nick(Client *client, IRCMessage message)
-{
-	if (param 없음)
-		// RPL_461_err_needmoreparams
-	else if (이미 등록된 닉네임)
-		// RPL_433_err_nicknameinuse
-	else if (사용할 수 없는 문자 포함 ('#', ',', ' ', '@' 등))
-		// RPL_432_err_erroneusnickname
-	else
-		// 동작
-	return (SUCCESS);
-}
-*/
 
 bool Irc::__isCommand(std::string cmd)
 {
@@ -851,6 +826,7 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 				client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), *chan_iter));
 			else
 			{
+				
 				if (client->isChannel(*chan_iter))
 				{
 					// 동작 - message 제작
@@ -878,8 +854,12 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 					chan->delOperator(client->getNickname());
 					chan->delUser(client->getNickname());
 					client->delChannel(chan->getName());
+					// 채널 삭제
+					if ((chan->getUsers()).size() == 0)
+						delChannel(chan->getName());
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
+					
 				}
 				else // RPL
 					client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), *chan_iter));
