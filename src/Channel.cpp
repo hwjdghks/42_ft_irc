@@ -7,14 +7,14 @@ Channel::Channel(void) {
 	option[KEY] = false;
 	option[LIMIT] = false;
 	option[INVITE] = false;
-	bot.setHostname("localhost");
-	bot.setNickname(BOTNAME);
-	bot.setUsername("ft_irc");
-	bot.setRealname("RoBoT");
-	bot.setBot(true);
-	bot.setLife(false);
-	bot.setFd(-1);
-	users.push_back(&bot);
+	// bot.setHostname("localhost");
+	// bot.setNickname(BOTNAME);
+	// bot.setUsername(SERVERNAME);
+	// bot.setRealname("RoBoT");
+	// bot.setBot(true);
+	// bot.setLife(false);
+	// bot.setFd(-1);
+	// users.push_back(&bot);
 }
 
 Channel::Channel(const Channel &ref)

@@ -59,7 +59,12 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 		std::cerr << "!    cmdline    [" << commandLine << "][" << commandLine.size() << "]" << std::endl;
 		// 만약 문자열이 공백이라면 loop 종료
 		if (commandLine.empty())
+		{
+			std::string tmp = client->getWrite_buffer();
+			client->addWrite_buffer(tmp);
+			std::cerr << "!    send    !\n" << tmp << "\n[" << tmp.size() << "]" << std::endl;
 			break ;
+		}
 		std::cerr << "!    execute    [" << commandLine << "][" << commandLine.size() << "]" << std::endl;
 		// 리시브 메세지 해석
 		IRCMessage recv_msg = parseMessage(commandLine);
@@ -258,16 +263,17 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 	}
 	if (client->isRegistered()) // RPL_001_rpl_welcome
 	{
-		if (password.empty() || !password.compare(client->getPassword()))
+		if ((password.empty() || !password.compare(client->getPassword())) && !(client->getNickname().empty()) && !(client->getUsername().empty()))
 		{
 			std::vector<int> fds;
 			fds.push_back(client->getFd());
-			_setSendEvent(false, true, false, true, fds);
+			_setSendEvent(true, true, false, true, fds);
 			client->addWrite_buffer(_001_rpl_welcome(SERVERURL, client->getNickname(), client->makeClientPrefix()));
 		}
 		else
 		{
-			_clearSendEvent();
+			std::vector<int> fds;
+			_setSendEvent(false, false, true, false, fds);
 			client->setLife(false);
 		}
 	}
@@ -523,15 +529,12 @@ int Irc::__cmd_who(Client *client, IRCMessage message)
 		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
 	{
-		std::list<Channel>::iterator iter;
-		for (iter = channels.begin(); iter != channels.end() ; iter++)
-			if (iter->getName() == message.parameters[0])
-				break ;
-		std::list<Client *> client_list = iter->getUsers();
+		Channel *chan = searchChannel(message.parameters[0]);
+		std::list<Client *> client_list = chan->getUsers();
 		for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 		{
 			// RPL_352_rpl_whoreply
-			if (iter->isOperator((*cl_it)->getNickname()))
+			if (chan->isOperator((*cl_it)->getNickname()))
 				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, client->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "@", (*cl_it)->getRealname()));
 			else
 				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, client->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "", (*cl_it)->getRealname()));
@@ -606,7 +609,7 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 			std::cerr << "[" << *target_iter << "]\n";
 		for (target_iter = targets.begin() ; target_iter != targets.end() ; target_iter++)
 		{
-			if (__isValidChannelName(*target_iter))
+			if ((*target_iter)[0] == '&' || (*target_iter)[0] == '#')
 			{
 				if (!__isValidChannelName(*target_iter)) // RPL 476
 					client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), *target_iter));
@@ -719,10 +722,12 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 		// loop
 		std::vector<std::string>::iterator chan_iter;
 		key_iter = keys.begin();
-		for (chan_iter = targets.begin() ; chan_iter != targets.end() ; chan_iter++)
+		for (chan_iter = targets.begin() ; (chan_iter != targets.end()) && !((*chan_iter).empty()) ; chan_iter++)
 		{
 			if (!__isValidChannelName(*chan_iter))
 				client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), *chan_iter));
+			else if (client->isMaxJoin()) // RPL_405_err_toomanychannels
+					client->addWrite_buffer(_405_err_toomanychannels(SERVERURL, client->getNickname(), *chan_iter));
 			else if (!isExistingChannel(*chan_iter)) // 존재하지 않는 채널
 			{
 				// 존재하지 않는 채널
@@ -748,8 +753,8 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 			{
 				// 채널 탐색 및 값 가져오기
 				Channel *chan = searchChannel(*chan_iter);
-				if (client->isMaxJoin()) // RPL_405_err_toomanychannels
-					client->addWrite_buffer(_405_err_toomanychannels(SERVERURL, client->getNickname(), *chan_iter));	
+				if (chan->isUser(client->getNickname())) // RPL 443
+					client->addWrite_buffer(_443_err_useronchannel(SERVERURL, client->getNickname(), *chan_iter));
 				else if (chan->getOptionInvite() && !chan->isInvite(client->getNickname())) // RPL_473_err_inviteonlychan
 					client->addWrite_buffer(_473_err_inviteonlychan(SERVERURL, client->getNickname(), *chan_iter));
 				else if (chan->getOptionkey() && (key_iter == keys.end() || !chan->isKey(*key_iter))) // RPL_475_err_badchannelkey
@@ -1070,7 +1075,7 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 
 	if (message.parameters.size() == 0) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else
+	else if ((message.parameters[0])[0] == '&' || (message.parameters[0])[0] == '#')
 	{
 		if (!__isValidChannelName(message.parameters[0])) // RPL 476
 			client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
@@ -1289,6 +1294,33 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 			}
 		}
 	}
+	else
+	{
+		if (client->getNickname().compare(message.parameters[0]) == 0) //501
+		{
+			std::string options = message.parameters[1];
+			std::string::iterator opt_iter = options.begin();
+			if (*opt_iter == '+')
+			{
+				opt_iter++;
+			}
+			else if (*opt_iter == '-')
+			{
+				opt_iter++;
+			}
+			for (; opt_iter != options.end() ; opt_iter++)
+			{
+				if (*opt_iter == 'i')
+					client->addWrite_buffer(SERVERURL " 221 " + message.parameters[0] + " :" + *opt_iter + "\r\n");
+				else
+					client->addWrite_buffer(SERVERURL " 501 " + message.parameters[0] + *opt_iter + ":is not a recognised user mode." + "\r\n");
+			}
+		}
+		else //502
+		{
+			client->addWrite_buffer(SERVERURL " 502 " + message.parameters[0] + ":Can't view modes for other users" + "\r\n");
+		}
+	}
 	return (SUCCESS);
 }
 /*
@@ -1300,6 +1332,14 @@ Tue Feb 06 2024 19:47:19 USERINPUT: C[422AAAAAA] I MODE #asdf +o jijeong
 Tue Feb 06 2024 19:47:25 USERINPUT: C[422AAAAAA] I MODE #asdf +o kiryud
 Tue Feb 06 2024 19:47:25 USEROUTPUT: C[422AAAAAA] O :jijeong!jeongjinse@localhost MODE #asdf +o :kiryud
 Tue Feb 06 2024 19:47:25 USEROUTPUT: C[422AAAAAB] O :jijeong!jeongjinse@localhost MODE #asdf +o :kiryud
+*/
+/*
+Sun Feb 11 2024 18:47:55 USERINPUT: C[422AAAAAB] I MODE kiryud
+Sun Feb 11 2024 18:47:55 USEROUTPUT: C[422AAAAAB] O :penguin.omega.example.org 502 jijeong :Can't view modes for other users
+Sun Feb 11 2024 18:48:01 USERINPUT: C[422AAAAAA] I MODE kiryud
+Sun Feb 11 2024 18:48:01 USEROUTPUT: C[422AAAAAA] O :penguin.omega.example.org 221 kiryud :+i
+Sun Feb 11 2024 18:48:06 USERINPUT: C[422AAAAAA] I MODE kiryud a
+Sun Feb 11 2024 18:48:06 USEROUTPUT: C[422AAAAAA] O :penguin.omega.example.org 501 kiryud a :is not a recognised user mode.
 */
 
 int	Irc::__not_a_command(Client *client, IRCMessage message)

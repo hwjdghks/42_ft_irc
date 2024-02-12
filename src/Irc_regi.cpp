@@ -111,24 +111,27 @@ int Irc::__register_nick(Client* client, IRCMessage message)
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 		return FAIL;
 	}
-	else if (_isNickInUse(client, message.parameters[0])) // nick 중복 여부 확인
-	{
-		_setSendEvent(false, false, false, true, fds);
-		client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
-		return FAIL;
-	}
-	else if (!__isValidNick(message.parameters[0]))
-	{
-		_setSendEvent(false, false, false, true, fds);
-        client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
-		return FAIL;
-	}
 	else
 	{
-		_setSendEvent(false, false, false, false, fds);
-		client->setNickname(message.parameters[0]);
-		client->setRegi(NICK, true);
-		return SUCCESS;
+		client->setRegi(NICK, true); 
+		if (_isNickInUse(client, message.parameters[0])) // nick 중복 여부 확인
+		{
+			_setSendEvent(false, false, false, true, fds);
+			client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
+			return FAIL;
+		}
+		else if (!__isValidNick(message.parameters[0]))
+		{
+			_setSendEvent(false, false, false, true, fds);
+			client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
+			return FAIL;
+		}
+		else
+		{
+			_setSendEvent(false, false, false, false, fds);
+			client->setNickname(message.parameters[0]);
+			return SUCCESS;
+		}
 	}
 }
 

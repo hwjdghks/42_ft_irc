@@ -16,6 +16,13 @@ int main(int argc, char **argv)
 		std::cout << "Invalid argument." << '\n';
 		return 1;
 	}
-	server.run();
+	try
+	{
+		server.run();
+	}
+	catch (std::exception e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 	return 0;
 }

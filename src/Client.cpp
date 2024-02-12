@@ -215,7 +215,7 @@ void Client::rollbackBuf(std::string buf, ssize_t len)
 
 bool Client::isMaxJoin(void)
 {
-	return (MAX_CHANNEL == this->channels.size());
+	return (MAX_CHANNEL <= this->channels.size());
 }
 
 bool Client::addChannel(Channel *channel)
