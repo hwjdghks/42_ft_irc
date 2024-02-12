@@ -913,7 +913,9 @@ int Irc::__cmd_topic(Client *client, IRCMessage message)
 		}
 		else
 		{
-			if (!iter->isOperator(client->getNickname())) // RPL 482
+			if (!iter->isUser(client->getNickname())) // RPL 442
+				client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), message.parameters[0]));
+			else if (iter->getOptionTitle() && !iter->isOperator(client->getNickname())) // RPL 482
 				client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[0]));
 			else
 			{
@@ -1030,7 +1032,7 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 		else if (!isExistingClient(message.parameters[0])) // RPL 401
 			client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), message.parameters[1]));
 		else if (!iter->isOperator(client->getNickname())) // RPL 482
-			client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), client->getNickname()));
+			client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[1]));
 		else
 		{
 			// 동작 - timestamp
@@ -1167,7 +1169,7 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 										client->addWrite_buffer(_467_err_keyset(SERVERURL, client->getNickname(), chan->getName()));
 									else
 									{
-										chan->setOptionTitle(flag);
+										chan->setOptionkey(flag);
 										std::string rplmsg;
 										if (flag)
 										{
@@ -1195,9 +1197,9 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 								param_iter++;
 								break ;
 							case 2: // limit
-								if (param_iter == message.parameters.end())
+								if (flag && param_iter == message.parameters.end())
 									client->addWrite_buffer(_696_err_invalidmodeparam(SERVERURL, client->getNickname(), "l"));
-								else if (!(flag == chan->getOptionLimit()))
+								else if (flag)
 								{
 									double num = std::strtod((*param_iter).c_str(), NULL);
 									if (std::string::npos != (*param_iter).find_first_not_of("0123456789") || 0 == num)
@@ -1207,14 +1209,7 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 										chan->setLimit(static_cast<size_t>(num));
 										chan->setOptionLimit(flag);
 										std::string rplmsg;
-										if (flag)
-										{
-											rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +l :" + *param_iter + "\r\n";
-										}
-										else
-										{
-											rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -l :" + *param_iter + "\r\n";
-										}
+										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +l :" + *param_iter + "\r\n";
 										std::list<Client *> client_list = chan->getUsers();
 										for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 										{
@@ -1227,8 +1222,25 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 										}
 										_setSendEvent(true, true, false, true, fds);
 									}
+									param_iter++;
 								}
-								param_iter++;
+								else
+								{
+									chan->setOptionLimit(flag);
+									std::string rplmsg;
+									rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -l :" + "\r\n";
+									std::list<Client *> client_list = chan->getUsers();
+									for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+									{
+										if (!(*cl_it)->isBot())
+										{
+											if ((*cl_it)->isAlive())
+												fds.push_back((*cl_it)->getFd());
+											(*cl_it)->addWrite_buffer(rplmsg);
+										}
+									}
+									_setSendEvent(true, true, false, true, fds);
+								}
 								break ;
 							case 3: // invite
 								if (!(flag == chan->getOptionInvite()))
@@ -1259,23 +1271,34 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
 								else if (!chan->isUser(*param_iter))
 									client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), *param_iter));
-								else if (!chan->isOperator(*param_iter))
+								else
 								{
-									Client *new_op = searchClient(*param_iter);
-									chan->addOperator(new_op);
 									std::string rplmsg;
-									rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +o :" + new_op->getNickname() + "\r\n";
-									std::list<Client *> client_list = chan->getUsers();
-									for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+									if (flag && !chan->isOperator(*param_iter))
 									{
-										if (!(*cl_it)->isBot())
-										{
-											if ((*cl_it)->isAlive())
-												fds.push_back((*cl_it)->getFd());
-											(*cl_it)->addWrite_buffer(rplmsg);
-										}
+										Client *new_op = searchClient(*param_iter);
+										chan->addOperator(new_op);
+										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +o :" + new_op->getNickname() + "\r\n";
 									}
-									_setSendEvent(true, true, false, true, fds);
+									else if (!flag && chan->isOperator(*param_iter))
+									{
+										chan->delOperator(*param_iter);
+										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -o :" + *param_iter + "\r\n";
+									}
+									if (!rplmsg.empty())
+									{
+										std::list<Client *> client_list = chan->getUsers();
+										for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+										{
+											if (!(*cl_it)->isBot())
+											{
+												if ((*cl_it)->isAlive())
+													fds.push_back((*cl_it)->getFd());
+												(*cl_it)->addWrite_buffer(rplmsg);
+											}
+										}
+										_setSendEvent(true, true, false, true, fds);
+									}
 								}
 								param_iter++;
 								break ;

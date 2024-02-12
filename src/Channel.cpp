@@ -144,7 +144,7 @@ Client *Channel::getBot()
 
 bool Channel::isKey(std::string key)
 {
-	if (password == key)
+	if (password.compare(key) == 0)
 		return (true);
 	return (false);
 }
