@@ -149,6 +149,7 @@ bool Server::sendMsg(const int &fd, void *udata)
 	{
 		if (!this->setReplyEventToClient(fd, control.deleteClient(fd)))
 			return false;
+		delTimerEvent(fd);
 		close(fd);
 	}
 	return true;
