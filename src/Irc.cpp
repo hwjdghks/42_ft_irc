@@ -772,6 +772,9 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					}
 					// 초대 리스트에서 삭제
 					chan->delInvite(client->getNickname());
+					std::string topic = chan->getTopic();
+					if (!topic.empty())
+						client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " " + chan->getName() + " :" + topic + "\r\n");
 					client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " = " + chan->getName() + " :" + chan_users + "\r\n");
 					client->addWrite_buffer(SERVERURL " 366 " + client->getNickname() + " " + chan->getName() + " :End of /NAMES list." + "\r\n");
 					_setSendEvent(true, true, false, true, fds);
@@ -808,6 +811,7 @@ part #asdf
 
 join #asdf
 :aaaa!a@localhost JOIN :#asdf
+:penguin.omega.example.org 332 nickname_ #asdf :this is topic
 :penguin.omega.example.org 353 aaaa = #asdf :aaaa @nickname_ @nickname
 :penguin.omega.example.org 366 aaaa #asdf :End of /NAMES list.
 */
