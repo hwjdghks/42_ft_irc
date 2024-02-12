@@ -70,21 +70,12 @@ void Server::run(void)
 	{
 		std::cout << DEBUGMSG "wait event... ";
 
-		timespec ts;
-		ts.tv_sec = 2;
-		ts.tv_nsec = 0;
-		int new_events_count = kevent(kq, NULL, 0, &event_list[0], MAX_CLIENT + 1, &ts);
+		int new_events_count = kevent(kq, NULL, 0, &event_list[0], MAX_CLIENT + 1, NULL);
 		if (new_events_count == -1)
 		{
 			std::cout << DEBUGMSG "fail.\n";
 			/* kevent error */
 			return this->stop();
-		}
-		else if (new_events_count == 0)
-		{
-			std::cout << DEBUGMSG "timeout.\n";
-			/* maybe no need code in this scope */
-			/* don't need to set timeout? */
 		}
 		else
 		{
