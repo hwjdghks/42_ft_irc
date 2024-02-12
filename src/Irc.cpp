@@ -774,7 +774,7 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					chan->delInvite(client->getNickname());
 					std::string topic = chan->getTopic();
 					if (!topic.empty())
-						client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " " + chan->getName() + " :" + topic + "\r\n");
+						client->addWrite_buffer(SERVERURL " 332 " + client->getNickname() + " " + chan->getName() + " :" + topic + "\r\n");
 					client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " = " + chan->getName() + " :" + chan_users + "\r\n");
 					client->addWrite_buffer(SERVERURL " 366 " + client->getNickname() + " " + chan->getName() + " :End of /NAMES list." + "\r\n");
 					_setSendEvent(true, true, false, true, fds);
