@@ -7,14 +7,14 @@ Channel::Channel(void) {
 	option[KEY] = false;
 	option[LIMIT] = false;
 	option[INVITE] = false;
-	bot.setHostname("localhost");
-	bot.setNickname(BOTNAME);
-	bot.setUsername("ft_irc");
-	bot.setRealname("RoBoT");
-	bot.setBot(true);
-	bot.setLife(false);
-	bot.setFd(-1);
-	users.push_back(&bot);
+	// bot.setHostname("localhost");
+	// bot.setNickname(BOTNAME);
+	// bot.setUsername(SERVERNAME);
+	// bot.setRealname("RoBoT");
+	// bot.setBot(true);
+	// bot.setLife(false);
+	// bot.setFd(-1);
+	// users.push_back(&bot);
 }
 
 Channel::Channel(const Channel &ref)
@@ -87,12 +87,12 @@ void Channel::delPassword()
 	password.clear();
 }
 
-std::vector<Client *> &Channel::getOperators(void)
+std::list<Client *> &Channel::getOperators(void)
 {
 	return this->operators;
 }
 
-std::vector<Client *> &Channel::getUsers(void)
+std::list<Client *> &Channel::getUsers(void)
 {
 	return this->users;
 }
@@ -206,7 +206,7 @@ bool Channel::addInvite(Client *client)
 
 bool Channel::isInvite(const std::string &nickname)
 {
-	for (std::vector<Client *>::const_iterator it = invited.begin(); it != invited.end(); it++)
+	for (std::list<Client *>::const_iterator it = invited.begin(); it != invited.end(); it++)
 		if ((*it)->getNickname() == nickname)
 			return true;
 	return false;
@@ -214,7 +214,7 @@ bool Channel::isInvite(const std::string &nickname)
 
 void Channel::delInvite(const std::string &nickname)
 {
-	for (std::vector<Client *>::iterator it = invited.begin(); it != invited.end(); it++)
+	for (std::list<Client *>::iterator it = invited.begin(); it != invited.end(); it++)
 	{
 		if ((*it)->getNickname() == nickname)
 		{
@@ -234,7 +234,7 @@ bool Channel::addOperator(Client *client)
 
 bool Channel::isOperator(const std::string &nickname) const
 {
-	for (std::vector<Client *>::const_iterator it = operators.begin(); it != operators.end(); it++)
+	for (std::list<Client *>::const_iterator it = operators.begin(); it != operators.end(); it++)
 		if ((*it)->getNickname() == nickname)
 			return true;
 	return false;
@@ -242,7 +242,7 @@ bool Channel::isOperator(const std::string &nickname) const
 
 void Channel::delOperator(const std::string &nickname)
 {
-	for (std::vector<Client *>::iterator it = operators.begin(); it != operators.end(); it++)
+	for (std::list<Client *>::iterator it = operators.begin(); it != operators.end(); it++)
 	{
 		if ((*it)->getNickname() == nickname)
 		{
@@ -262,7 +262,7 @@ bool Channel::addUser(Client *client)
 
 bool Channel::isUser(const std::string &nickname) const
 {
-	for (std::vector<Client *>::const_iterator it = users.begin(); it != users.end(); it++)
+	for (std::list<Client *>::const_iterator it = users.begin(); it != users.end(); it++)
 		if ((*it)->getNickname() == nickname)
 			return true;
 	return false;
@@ -270,7 +270,7 @@ bool Channel::isUser(const std::string &nickname) const
 
 void Channel::delUser(const std::string &nickname)
 {
-	for (std::vector<Client *>::iterator it = users.begin(); it != users.end(); it++)
+	for (std::list<Client *>::iterator it = users.begin(); it != users.end(); it++)
 	{
 		if ((*it)->getNickname() == nickname)
 		{

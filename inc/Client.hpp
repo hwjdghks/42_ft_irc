@@ -19,7 +19,7 @@ private:
 	std::string				username;
 	std::string				hostname;
 	std::string				realname;
-	std::vector<Channel *>	channels;
+	std::list<Channel *>	channels;
 public:
 	Client();
 	Client(const Client &ref);
@@ -27,7 +27,7 @@ public:
 
 	Client &operator=(const Client &ref);
 
-	std::vector<Channel *> &getChannels(void);
+	std::list<Channel *> &getChannels(void);
 
 	void setBot(const bool &bot);
 	const bool &getBot(void) const;

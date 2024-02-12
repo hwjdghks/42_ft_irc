@@ -37,7 +37,7 @@ Client &Client::operator=(const Client &ref)
 	return *this;
 }
 
-std::vector<Channel *> &Client::getChannels(void)
+std::list<Channel *> &Client::getChannels(void)
 {
 	return this->channels;
 }
@@ -215,7 +215,7 @@ void Client::rollbackBuf(std::string buf, ssize_t len)
 
 bool Client::isMaxJoin(void)
 {
-	return (MAX_CHANNEL == this->channels.size());
+	return (MAX_CHANNEL <= this->channels.size());
 }
 
 bool Client::addChannel(Channel *channel)
@@ -228,7 +228,7 @@ bool Client::addChannel(Channel *channel)
 
 bool Client::isChannel(const std::string &name) const
 {
-	for (std::vector<Channel *>::const_iterator it = channels.begin(); it != channels.end(); it++)
+	for (std::list<Channel *>::const_iterator it = channels.begin(); it != channels.end(); it++)
 		if ((*it)->getName() == name)
 			return true;
 	return false;
@@ -236,7 +236,7 @@ bool Client::isChannel(const std::string &name) const
 
 void Client::delChannel(const std::string &name)
 {
-	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+	for (std::list<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
 		if ((*it)->getName() == name)
 		{

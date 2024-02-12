@@ -56,11 +56,16 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 	{
 		// 명령줄 받아보기
 		commandLine = client->getLineOfRead_buffer();
-		std::cerr << "!    cmdline    [" << commandLine << "]" << std::endl;
+		std::cerr << "!    cmdline    [" << commandLine << "][" << commandLine.size() << "]" << std::endl;
 		// 만약 문자열이 공백이라면 loop 종료
 		if (commandLine.empty())
+		{
+			std::string tmp = client->getWrite_buffer();
+			client->addWrite_buffer(tmp);
+			std::cerr << "!    send    !\n" << tmp << "\n[" << tmp.size() << "]" << std::endl;
 			break ;
-		std::cerr << "!    execute    [" << commandLine << "]" << std::endl;
+		}
+		std::cerr << "!    execute    [" << commandLine << "][" << commandLine.size() << "]" << std::endl;
 		// 리시브 메세지 해석
 		IRCMessage recv_msg = parseMessage(commandLine);
 		// 명령어에 따라 동작하기
@@ -78,7 +83,7 @@ Client *Irc::searchClient(int fd)
 {
 	Client *client = NULL;
 	// client vector를 순회하여 fd에 해당하는 클라이언트 가져오기
-	for(std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
+	for(std::list<Client>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->getFd() == fd)
 		{
@@ -93,7 +98,7 @@ Client *Irc::searchClient(const std::string &nickname)
 {
 	Client *client = NULL;
 	// client vector를 순회하여 fd에 해당하는 클라이언트 가져오기
-	for(std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
+	for(std::list<Client>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->getNickname() == nickname)
 		{
@@ -108,7 +113,7 @@ std::vector<int> Irc::getAllClientFd(void) const
 {
 	std::vector<int> fds;
 
-	for (std::vector<Client>::const_iterator it = clients.begin(); it != clients.end(); it++)
+	for (std::list<Client>::const_iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		fds.push_back(it->getFd());
 	}
@@ -138,12 +143,12 @@ t_send_event Irc::quit(int fd, const char *msg)
 	client->setLife(false);
 	std::vector<int> fds;
 	// 해당 클라이언트가 속한 채널의 유저들을 찾는다
-	std::vector<Channel *> &channels = client->getChannels();
-	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+	std::list<Channel *> &channels = client->getChannels();
+	for (std::list<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
 		Channel *curr_ch = *it;
-		std::vector<Client *> client_list = curr_ch->getUsers();
-		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+		std::list<Client *> client_list = curr_ch->getUsers();
+		for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 	// 해당 유저들의 fd를 t_send_event에 넣는다
 			if ((*cl_it)->getFd() != fd)
 			{
@@ -163,8 +168,8 @@ t_send_event Irc::deleteClient(int fd)
 	// 해당 fd의 클라이언트를 찾는다
 	Client *client = searchClient(fd);
 	// 해당 클라이언트가 가입된 채널을 찾아 제거한다
-	std::vector<Channel *> channels = client->getChannels();
-	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+	std::list<Channel *> channels = client->getChannels();
+	for (std::list<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
 		Channel *curr_ch = *it;
 
@@ -174,7 +179,7 @@ t_send_event Irc::deleteClient(int fd)
 			curr_ch->delUser(client->getNickname());
 	}
 	// 클라이언트 벡터에서 해당 클라이언트를 제거한다.
-	for (std::vector<Client>::iterator it = clients.begin(); it != clients.end(); it++)
+	for (std::list<Client>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->getFd() == fd)
 		{
@@ -230,7 +235,7 @@ Channel *Irc::searchChannel(const std::string &channelname)
 {
 	Channel *channel = NULL;
 	// Channel vector를 순회하여 fd에 해당하는 클라이언트 가져오기
-	for(std::vector<Channel>::iterator it = channels.begin(); it != channels.end(); it++)
+	for(std::list<Channel>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
 		if (it->getName() == channelname)
 		{
@@ -239,6 +244,19 @@ Channel *Irc::searchChannel(const std::string &channelname)
 		}
 	}
 	return (channel);
+}
+
+int Irc::delChannel(std::string name)
+{
+	std::list<Channel>::iterator it;
+
+	for (it = channels.begin() ; it != channels.end() ; it++)
+	{
+		if (it->getName().compare(name) == 0)
+			break ;
+	}
+	channels.erase(it);
+	return (SUCCESS);
 }
 
 int Irc::_register_executor(Client *client, IRCMessage recv_msg)
@@ -258,61 +276,22 @@ int Irc::_register_executor(Client *client, IRCMessage recv_msg)
 	}
 	if (client->isRegistered()) // RPL_001_rpl_welcome
 	{
-		std::cerr << "[" << password << "]" << std::endl;
-		std::cerr << "[" << client->getPassword() << "]" << std::endl;
-		if (password.empty() || !password.compare(client->getPassword()))
+		if ((password.empty() || !password.compare(client->getPassword())) && !(client->getNickname().empty()) && !(client->getUsername().empty()))
 		{
 			std::vector<int> fds;
 			fds.push_back(client->getFd());
-			_setSendEvent(false, true, false, true, fds);
+			_setSendEvent(true, true, false, true, fds);
 			client->addWrite_buffer(_001_rpl_welcome(SERVERURL, client->getNickname(), client->makeClientPrefix()));
 		}
 		else
 		{
-			_clearSendEvent();
+			std::vector<int> fds;
+			_setSendEvent(false, false, true, false, fds);
 			client->setLife(false);
 		}
 	}
 	return (SUCCESS);
 }
-
-/* Irc_regi.cpp에서 구현됨
-동작의 정의가 있는 부분이라 일단 주석 처리만 해 둔 상태
-추후 동작 확인할 때 사용하고 확인이 완료되어 필요성이 사라진다면 삭제 요망
-
-int Irc::__register_user(Client *client, IRCMessage message)
-{
-	if (param 부족함)
-		// RPL_461_err_needmoreparams
-	else if (기존 데이터 존재함)
-		// RPL_462_err_alreadyregisterd
-	else
-		// 동작
-	return (SUCCESS);
-}
-
-int Irc::__register_pass(Client *client, IRCMessage message)
-{
-	if (param 없음)
-		// RPL_461_err_needmoreparams
-	else
-		// 동작
-	return (SUCCESS);
-}
-
-int Irc::__register_nick(Client *client, IRCMessage message)
-{
-	if (param 없음)
-		// RPL_461_err_needmoreparams
-	else if (이미 등록된 닉네임)
-		// RPL_433_err_nicknameinuse
-	else if (사용할 수 없는 문자 포함 ('#', ',', ' ', '@' 등))
-		// RPL_432_err_erroneusnickname
-	else
-		// 동작
-	return (SUCCESS);
-}
-*/
 
 bool Irc::__isCommand(std::string cmd)
 {
@@ -412,14 +391,14 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 		client->setNickname(message.parameters[0]);
 		// client가 소속된 channel의 모든 유저에게 전송
 		// current client의 channel size만큼 반복
-		std::vector<Channel *> &channels = client->getChannels();
-		for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+		std::list<Channel *> &channels = client->getChannels();
+		for (std::list<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 		{
 			// 해당 channel의 send_msg 제작
 			// channel은 user size만큼 반복
 			Channel *curr_ch = *it;
-			std::vector<Client *> client_list = curr_ch->getUsers();
-			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+			std::list<Client *> client_list = curr_ch->getUsers();
+			for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			{
 				if (!(*cl_it)->isBot())
 				{
@@ -491,13 +470,13 @@ int Irc::__cmd_list(Client *client, IRCMessage message)
 	_setSendEvent(true, true, false, true, fds);
 	// RPL_321_rpl_liststart
 	client->addWrite_buffer(_321_rpl_liststart(SERVERURL, client->getNickname()));
-	for (std::vector<Channel>::iterator it = channels.begin(); it != channels.end(); it++)
+	for (std::list<Channel>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
 		int cnt;
 
 		cnt = 0;
-		std::vector<Client *> client_list = (it)->getUsers();
-		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+		std::list<Client *> client_list = (it)->getUsers();
+		for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			cnt++;
 		std::stringstream ss;
 		ss << cnt;
@@ -525,15 +504,12 @@ int Irc::__cmd_who(Client *client, IRCMessage message)
 		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
 	{
-		std::vector<Channel>::iterator iter;
-		for (iter = channels.begin(); iter != channels.end() ; iter++)
-			if (iter->getName() == message.parameters[0])
-				break ;
-		std::vector<Client *> client_list = iter->getUsers();
-		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+		Channel *chan = searchChannel(message.parameters[0]);
+		std::list<Client *> client_list = chan->getUsers();
+		for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 		{
 			// RPL_352_rpl_whoreply
-			if (iter->isOperator((*cl_it)->getNickname()))
+			if (chan->isOperator((*cl_it)->getNickname()))
 				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, client->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "@", (*cl_it)->getRealname()));
 			else
 				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, client->getNickname(), message.parameters[0], (*cl_it)->getUsername(), "", (*cl_it)->getRealname()));
@@ -552,12 +528,12 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 		fds.push_back(client->getFd());
 	_setSendEvent(true, false, false, true, fds);
 
-	std::vector<Channel *> &channels = client->getChannels();
-	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+	std::list<Channel *> &channels = client->getChannels();
+	for (std::list<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
 		Channel *curr_ch = *it;
-		std::vector<Client *> client_list = curr_ch->getUsers();
-		for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+		std::list<Client *> client_list = curr_ch->getUsers();
+		for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 	// 해당 유저들의 fd를 t_send_event에 넣는다
 			if ((*cl_it)->getFd() != client->getFd())
 			{
@@ -608,7 +584,7 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 			std::cerr << "[" << *target_iter << "]\n";
 		for (target_iter = targets.begin() ; target_iter != targets.end() ; target_iter++)
 		{
-			if (__isValidChannelName(*target_iter))
+			if ((*target_iter)[0] == '&' || (*target_iter)[0] == '#')
 			{
 				if (!__isValidChannelName(*target_iter)) // RPL 476
 					client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), *target_iter));
@@ -646,8 +622,8 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 					{
 						reply_msg = client->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + msg + "\r\n";
 					}
-					std::vector<Client *> client_list = chan->getUsers();
-					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+					std::list<Client *> client_list = chan->getUsers();
+					for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 					{
 						if (!(*cl_it)->isBot() && client != *cl_it)
 						{
@@ -721,10 +697,12 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 		// loop
 		std::vector<std::string>::iterator chan_iter;
 		key_iter = keys.begin();
-		for (chan_iter = targets.begin() ; chan_iter != targets.end() ; chan_iter++)
+		for (chan_iter = targets.begin() ; (chan_iter != targets.end()) && !((*chan_iter).empty()) ; chan_iter++)
 		{
 			if (!__isValidChannelName(*chan_iter))
 				client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), *chan_iter));
+			else if (client->isMaxJoin()) // RPL_405_err_toomanychannels
+					client->addWrite_buffer(_405_err_toomanychannels(SERVERURL, client->getNickname(), *chan_iter));
 			else if (!isExistingChannel(*chan_iter)) // 존재하지 않는 채널
 			{
 				// 존재하지 않는 채널
@@ -739,6 +717,10 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					client->addChannel(searchChannel(*chan_iter));
 				}
 				client->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter + "\r\n");
+
+				Channel *chan = searchChannel(*chan_iter);
+				client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " = " + chan->getName() + " :@" + client->getNickname() + "\r\n");
+				client->addWrite_buffer(SERVERURL " 366 " + client->getNickname() + " " + chan->getName() + " :End of /NAMES list." + "\r\n");
 				_setSendEvent(true, true, false, true, fds);
 				fds.clear();
 			}
@@ -746,8 +728,8 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 			{
 				// 채널 탐색 및 값 가져오기
 				Channel *chan = searchChannel(*chan_iter);
-				if (client->isMaxJoin()) // RPL_405_err_toomanychannels
-					client->addWrite_buffer(_405_err_toomanychannels(SERVERURL, client->getNickname(), *chan_iter));	
+				if (chan->isUser(client->getNickname())) // RPL 443
+					client->addWrite_buffer(_443_err_useronchannel(SERVERURL, client->getNickname(), *chan_iter));
 				else if (chan->getOptionInvite() && !chan->isInvite(client->getNickname())) // RPL_473_err_inviteonlychan
 					client->addWrite_buffer(_473_err_inviteonlychan(SERVERURL, client->getNickname(), *chan_iter));
 				else if (chan->getOptionkey() && (key_iter == keys.end() || !chan->isKey(*key_iter))) // RPL_475_err_badchannelkey
@@ -759,8 +741,9 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					// 일반 유저로 가입
 					chan->addUser(client);
 					client->addChannel(chan);
-					std::vector<Client *> client_list = chan->getUsers();
-					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+					std::string chan_users;
+					std::list<Client *> client_list = chan->getUsers();
+					for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 					{
 						if (!(*cl_it)->isBot())
 						{
@@ -770,11 +753,17 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 							{
 								fds.push_back((*cl_it)->getFd());
 								(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter + "\r\n");
+								if (chan->isOperator((*cl_it)->getNickname()))
+									chan_users += "@" + (*cl_it)->getNickname() + " ";
+								else
+									chan_users += (*cl_it)->getNickname() + " ";
 							}
 						}
 					}
-					// 채널에 유저 추가
+					// 초대 리스트에서 삭제
 					chan->delInvite(client->getNickname());
+					client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " = " + chan->getName() + " :" + chan_users + "\r\n");
+					client->addWrite_buffer(SERVERURL " 366 " + client->getNickname() + " " + chan->getName() + " :End of /NAMES list." + "\r\n");
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
 				}
@@ -792,6 +781,25 @@ join #aa
 :penguin.omega.example.org 366 nick #aa :End of /NAMES list.
 :kiryud!jeongjinse@127.0.0.1 JOIN :#aa
 :jijeong!jeongjinse@127.0.0.1 JOIN :#aa
+*/
+/* irssi는 어떻게 유저와 오퍼레이터를 기록할 수 있었는지에 대한 해답
+join #asdf
+:aaaa!a@localhost JOIN :#asdf
+:penguin.omega.example.org 353 aaaa = #asdf :@aaaa
+:penguin.omega.example.org 366 aaaa #asdf :End of /NAMES list.
+
+join #asdf
+:aaaa!a@localhost JOIN :#asdf
+:penguin.omega.example.org 353 aaaa = #asdf :aaaa @nickname_ nickname
+:penguin.omega.example.org 366 aaaa #asdf :End of /NAMES list.
+
+part #asdf
+:aaaa!a@localhost PART :#asdf
+
+join #asdf
+:aaaa!a@localhost JOIN :#asdf
+:penguin.omega.example.org 353 aaaa = #asdf :aaaa @nickname_ @nickname
+:penguin.omega.example.org 366 aaaa #asdf :End of /NAMES list.
 */
 
 int Irc::__cmd_part(Client *client, IRCMessage message)
@@ -818,6 +826,7 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 				client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), *chan_iter));
 			else
 			{
+				
 				if (client->isChannel(*chan_iter))
 				{
 					// 동작 - message 제작
@@ -829,8 +838,8 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 					// 동작 - channel 찾아오기
 					Channel *chan = searchChannel(*chan_iter);
 					// 채절의 모든 유저에게 나간다고 알림
-					std::vector<Client *> client_list = chan->getUsers();
-					for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+					std::list<Client *> client_list = chan->getUsers();
+					for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 					{
 						if (!(*cl_it)->isBot())
 						{
@@ -845,8 +854,12 @@ int Irc::__cmd_part(Client *client, IRCMessage message)
 					chan->delOperator(client->getNickname());
 					chan->delUser(client->getNickname());
 					client->delChannel(chan->getName());
+					// 채널 삭제
+					if ((chan->getUsers()).size() == 0)
+						delChannel(chan->getName());
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
+					
 				}
 				else // RPL
 					client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), *chan_iter));
@@ -871,7 +884,7 @@ int Irc::__cmd_topic(Client *client, IRCMessage message)
 		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
 	{
-		std::vector<Channel>::iterator iter;
+		std::list<Channel>::iterator iter;
 			for (iter = channels.begin(); iter != channels.end() ; iter++)
 				if (iter->getName() == message.parameters[0])
 					break ;
@@ -901,8 +914,8 @@ int Irc::__cmd_topic(Client *client, IRCMessage message)
 				}
 				iter->setTopic(topic);
 				// 해당 channel의 모든 client에게 전송
-				std::vector<Client *> client_list = iter->getUsers();
-				for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+				std::list<Client *> client_list = iter->getUsers();
+				for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 				{
 					if (!(*cl_it)->isBot())
 					{
@@ -933,7 +946,7 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
 	{
-		std::vector<Channel>::iterator iter;
+		std::list<Channel>::iterator iter;
 		for (iter = channels.begin(); iter != channels.end() ; iter++)
 			if (iter->getName() == message.parameters[0])
 				break ;
@@ -956,8 +969,8 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 			}
 			// 동작 - timestamp
 			// 해당 channel의 모든 유저에게 전송
-			std::vector<Client *> client_list = iter->getUsers();
-			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+			std::list<Client *> client_list = iter->getUsers();
+			for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			{
 				if (!(*cl_it)->isBot())
 				{
@@ -988,41 +1001,41 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 
 	if (message.parameters.size() < 2) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else if (!__isValidChannelName(message.parameters[0])) // RPL 476
-		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
-	else if (!isExistingChannel(message.parameters[0])) // RPL 403
-		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[0]));
+	else if (!__isValidChannelName(message.parameters[1])) // RPL 476
+		client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[1]));
+	else if (!isExistingChannel(message.parameters[1])) // RPL 403
+		client->addWrite_buffer(_403_err_nosuchchannel(SERVERURL, client->getNickname(), message.parameters[1]));
 	else
 	{
-		std::vector<Channel>::iterator iter;
+		std::list<Channel>::iterator iter;
 		for (iter = channels.begin(); iter != channels.end() ; iter++)
-			if (iter->getName() == message.parameters[0])
+			if (iter->getName() == message.parameters[1])
 				break ;
 		if (!iter->isUser(client->getNickname())) // RPL 442
-			client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), message.parameters[0]));
-		else if (!iter->isUser(message.parameters[1])) // RPL 401
+			client->addWrite_buffer(_442_err_notonchannel(SERVERURL, client->getNickname(), message.parameters[1]));
+		else if (!isExistingClient(message.parameters[0])) // RPL 401
 			client->addWrite_buffer(_401_err_nosuchnick(SERVERURL, client->getNickname(), message.parameters[1]));
 		else if (!iter->isOperator(client->getNickname())) // RPL 482
-			client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), message.parameters[0]));
+			client->addWrite_buffer(_482_err_chanoprivsneeded(SERVERURL, client->getNickname(), client->getNickname()));
 		else
 		{
 			// 동작 - timestamp
 			// 해당 channel의 모든 유저에게 전송
-			std::vector<Client *> client_list = iter->getUsers();
-			for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+			std::list<Client *> client_list = iter->getUsers();
+			for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 			{
 				if (!(*cl_it)->isBot())
 				{
 					if ((*cl_it)->isAlive())
 						fds.push_back((*cl_it)->getFd());
-					(*cl_it)->addWrite_buffer(_341_rpl_inviting(SERVERURL, client->getNickname(), iter->getName(), message.parameters[1]));
+					(*cl_it)->addWrite_buffer(_341_rpl_inviting(SERVERURL, client->getNickname(), iter->getName(), message.parameters[0]));
 				}
 			}
 			// 해당 유저에게 초대 메세지 보내기
-			Client *tmp_client = searchClient(message.parameters[1]);
+			Client *tmp_client = searchClient(message.parameters[0]);
 			if ((tmp_client)->isAlive())
 				fds.push_back((tmp_client)->getFd());
-			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + " INVITE " + tmp_client->getNickname() + " :" + message.parameters[0] + "\r\n");
+			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + " INVITE " + tmp_client->getNickname() + " :" + message.parameters[1] + "\r\n");
 			// 해당 유저를 channel invited에 추가
 			iter->addInvite(tmp_client);
 			_setSendEvent(true, true, false, true, fds);
@@ -1042,7 +1055,7 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 
 	if (message.parameters.size() == 0) // RPL 461
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
-	else
+	else if ((message.parameters[0])[0] == '&' || (message.parameters[0])[0] == '#')
 	{
 		if (!__isValidChannelName(message.parameters[0])) // RPL 476
 			client->addWrite_buffer(_476_err_badchanmask(SERVERURL, client->getNickname(), message.parameters[0]));
@@ -1118,8 +1131,8 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									{
 										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " :-t" + "\r\n";
 									}
-									std::vector<Client *> client_list = chan->getUsers();
-									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+									std::list<Client *> client_list = chan->getUsers();
+									for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 									{
 										if (!(*cl_it)->isBot())
 										{
@@ -1152,8 +1165,8 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 											chan->delPassword();
 											rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -k :" + *param_iter + "\r\n";
 										}
-										std::vector<Client *> client_list = chan->getUsers();
-										for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+										std::list<Client *> client_list = chan->getUsers();
+										for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 										{
 											if (!(*cl_it)->isBot())
 											{
@@ -1173,28 +1186,33 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 								else if (!(flag == chan->getOptionLimit()))
 								{
 									double num = std::strtod((*param_iter).c_str(), NULL);
-									chan->setLimit(static_cast<size_t>(num));
-									chan->setOptionLimit(flag);
-									std::string rplmsg;
-									if (flag)
-									{
-										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +l :" + *param_iter + "\r\n";
-									}
+									if (std::string::npos != (*param_iter).find_first_not_of("0123456789") || 0 == num)
+										client->addWrite_buffer(_472_err_unknownmode(SERVERURL, client->getNickname(), ""));
 									else
 									{
-										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -l :" + *param_iter + "\r\n";
-									}
-									std::vector<Client *> client_list = chan->getUsers();
-									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
-									{
-										if (!(*cl_it)->isBot())
+										chan->setLimit(static_cast<size_t>(num));
+										chan->setOptionLimit(flag);
+										std::string rplmsg;
+										if (flag)
 										{
-											if ((*cl_it)->isAlive())
-												fds.push_back((*cl_it)->getFd());
-											(*cl_it)->addWrite_buffer(rplmsg);
+											rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +l :" + *param_iter + "\r\n";
 										}
+										else
+										{
+											rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " -l :" + *param_iter + "\r\n";
+										}
+										std::list<Client *> client_list = chan->getUsers();
+										for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+										{
+											if (!(*cl_it)->isBot())
+											{
+												if ((*cl_it)->isAlive())
+													fds.push_back((*cl_it)->getFd());
+												(*cl_it)->addWrite_buffer(rplmsg);
+											}
+										}
+										_setSendEvent(true, true, false, true, fds);
 									}
-									_setSendEvent(true, true, false, true, fds);
 								}
 								param_iter++;
 								break ;
@@ -1207,8 +1225,8 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " :+i" + "\r\n";
 									else
 										rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " :-i" + "\r\n";
-									std::vector<Client *> client_list = chan->getUsers();
-									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+									std::list<Client *> client_list = chan->getUsers();
+									for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 									{
 										if (!(*cl_it)->isBot())
 										{
@@ -1232,8 +1250,8 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 									chan->addOperator(searchClient(*param_iter));
 									std::string rplmsg;
 									rplmsg = client->makeClientPrefix() + " MODE " + chan->getName() + " +o :" + client->getNickname() + "\r\n";
-									std::vector<Client *> client_list = chan->getUsers();
-									for (std::vector<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
+									std::list<Client *> client_list = chan->getUsers();
+									for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 									{
 										if (!(*cl_it)->isBot())
 										{
@@ -1256,6 +1274,33 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 			}
 		}
 	}
+	else
+	{
+		if (client->getNickname().compare(message.parameters[0]) == 0) //501
+		{
+			std::string options = message.parameters[1];
+			std::string::iterator opt_iter = options.begin();
+			if (*opt_iter == '+')
+			{
+				opt_iter++;
+			}
+			else if (*opt_iter == '-')
+			{
+				opt_iter++;
+			}
+			for (; opt_iter != options.end() ; opt_iter++)
+			{
+				if (*opt_iter == 'i')
+					client->addWrite_buffer(SERVERURL " 221 " + message.parameters[0] + " :" + *opt_iter + "\r\n");
+				else
+					client->addWrite_buffer(SERVERURL " 501 " + message.parameters[0] + *opt_iter + ":is not a recognised user mode." + "\r\n");
+			}
+		}
+		else //502
+		{
+			client->addWrite_buffer(SERVERURL " 502 " + message.parameters[0] + ":Can't view modes for other users" + "\r\n");
+		}
+	}
 	return (SUCCESS);
 }
 /*
@@ -1267,6 +1312,14 @@ Tue Feb 06 2024 19:47:19 USERINPUT: C[422AAAAAA] I MODE #asdf +o jijeong
 Tue Feb 06 2024 19:47:25 USERINPUT: C[422AAAAAA] I MODE #asdf +o kiryud
 Tue Feb 06 2024 19:47:25 USEROUTPUT: C[422AAAAAA] O :jijeong!jeongjinse@localhost MODE #asdf +o :kiryud
 Tue Feb 06 2024 19:47:25 USEROUTPUT: C[422AAAAAB] O :jijeong!jeongjinse@localhost MODE #asdf +o :kiryud
+*/
+/*
+Sun Feb 11 2024 18:47:55 USERINPUT: C[422AAAAAB] I MODE kiryud
+Sun Feb 11 2024 18:47:55 USEROUTPUT: C[422AAAAAB] O :penguin.omega.example.org 502 jijeong :Can't view modes for other users
+Sun Feb 11 2024 18:48:01 USERINPUT: C[422AAAAAA] I MODE kiryud
+Sun Feb 11 2024 18:48:01 USEROUTPUT: C[422AAAAAA] O :penguin.omega.example.org 221 kiryud :+i
+Sun Feb 11 2024 18:48:06 USERINPUT: C[422AAAAAA] I MODE kiryud a
+Sun Feb 11 2024 18:48:06 USEROUTPUT: C[422AAAAAA] O :penguin.omega.example.org 501 kiryud a :is not a recognised user mode.
 */
 
 int	Irc::__not_a_command(Client *client, IRCMessage message)

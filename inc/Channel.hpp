@@ -13,9 +13,9 @@ private:
 	std::string				password;
 	std::string				topic;
 	std::string				name;
-	std::vector<Client *>	operators;
-	std::vector<Client *>	users;
-	std::vector<Client *>	invited;
+	std::list<Client *>	operators;
+	std::list<Client *>	users;
+	std::list<Client *>	invited;
 public:
 	Channel();
 	Channel(const Channel &ref);
@@ -33,8 +33,8 @@ public:
 	bool getOptionLimit(void);
 	bool getOptionInvite(void);
 
-	std::vector<Client *> &getOperators(void);
-	std::vector<Client *> &getUsers(void);
+	std::list<Client *> &getOperators(void);
+	std::list<Client *> &getUsers(void);
 
 	void setPassword(std::string);
 	void setTopic(std::string);

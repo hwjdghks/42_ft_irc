@@ -40,7 +40,7 @@ bool Irc::__isValidNick(const std::string &nick)
 
 bool Irc::_isNickInUse(Client* cur_client, std::string to_be_nick)
 {
-	for (std::vector<Client>::iterator it = clients.begin(); it < clients.end(); it++)
+	for (std::list<Client>::iterator it = clients.begin(); it != clients.end(); it++)
 	{
 		if (cur_client->getFd() == it->getFd())
 			continue;
@@ -111,24 +111,27 @@ int Irc::__register_nick(Client* client, IRCMessage message)
 		client->addWrite_buffer(_461_err_needmoreparams(SERVERURL, client->getNickname(), message.command));
 		return FAIL;
 	}
-	else if (_isNickInUse(client, message.parameters[0])) // nick 중복 여부 확인
-	{
-		_setSendEvent(false, false, false, true, fds);
-		client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
-		return FAIL;
-	}
-	else if (!__isValidNick(message.parameters[0]))
-	{
-		_setSendEvent(false, false, false, true, fds);
-        client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
-		return FAIL;
-	}
 	else
 	{
-		_setSendEvent(false, false, false, false, fds);
-		client->setNickname(message.parameters[0]);
-		client->setRegi(NICK, true);
-		return SUCCESS;
+		client->setRegi(NICK, true); 
+		if (_isNickInUse(client, message.parameters[0])) // nick 중복 여부 확인
+		{
+			_setSendEvent(false, false, false, true, fds);
+			client->addWrite_buffer(_433_err_nicknameinuse(SERVERURL, client->getNickname(), message.parameters[0]));
+			return FAIL;
+		}
+		else if (!__isValidNick(message.parameters[0]))
+		{
+			_setSendEvent(false, false, false, true, fds);
+			client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
+			return FAIL;
+		}
+		else
+		{
+			_setSendEvent(false, false, false, false, fds);
+			client->setNickname(message.parameters[0]);
+			return SUCCESS;
+		}
 	}
 }
 
@@ -204,8 +207,8 @@ IRCMessage Irc::parseMessage(std::string message)
 
 bool Irc::isExistingClient(std::string clName)
 {
-	std::vector<Client>::iterator it;
-	for(it = clients.begin(); it < clients.end(); it++)
+	std::list<Client>::iterator it;
+	for(it = clients.begin(); it != clients.end(); it++)
 	{
 		if (it->getNickname() == clName)
 			return true;
@@ -215,8 +218,8 @@ bool Irc::isExistingClient(std::string clName)
 
 bool Irc::isExistingChannel(std::string chName)
 {
-	std::vector<Channel>::iterator it;
-	for(it = channels.begin(); it < channels.end(); it++)
+	std::list<Channel>::iterator it;
+	for(it = channels.begin(); it != channels.end(); it++)
 	{
 		if (it->getName() == chName)
 			return true;
