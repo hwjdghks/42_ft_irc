@@ -23,7 +23,7 @@ bool Irc::__isValidChannelName(const std::string &chName)
 	if (chName[0] != '&' && chName[0] != '#')
 		return false;
 	tmpStr = chName.substr(1);
-	for (int i = 0; i < tmpStr.length(); i++)
+	for (size_t i = 0; i < tmpStr.length(); i++)
 	{
 		if (!___isValidChar(tmpStr[i]))
 			return false;
@@ -35,7 +35,7 @@ bool Irc::__isValidNick(const std::string &nick)
 {
 	if (nick.length() > 9)
 		return false;
-	for (int i = 0; i < nick.length(); i++)
+	for (size_t i = 0; i < nick.length(); i++)
 	{
 		if (!___isValidChar(nick[i]))
 			return false;
