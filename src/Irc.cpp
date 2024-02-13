@@ -380,13 +380,13 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 		client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
 	{
-		fds.clear();
 		// 동작 timestamp
 		// client가 소속된 channel의 모든 유저에게 전송
 		// current client의 channel size만큼 반복
 		std::list<Channel *> &channels = client->getChannels();
 		for (std::list<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 		{
+			client->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
 			// 해당 channel의 send_msg 제작
 			// channel은 user size만큼 반복
 			Channel *curr_ch = *it;
@@ -401,7 +401,7 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 					for (fd_iter = fds.begin() ; fd_iter != fds.end() ; fd_iter++)
 						if ((*cl_it)->getFd() == *fd_iter)
 							break ;
-					if (!fds.empty() && fd_iter == fds.end())
+					if (fd_iter == fds.end())
 					{
 						if ((*cl_it)->isAlive())
 							fds.push_back((*cl_it)->getFd());
