@@ -1,6 +1,5 @@
 #include "Client.hpp"
 #include "Channel.hpp"
-#include <iostream>
 
 Client::Client(void) : fd(0), bot(false), life(true)
 {

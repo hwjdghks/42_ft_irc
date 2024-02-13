@@ -1,5 +1,4 @@
 #include "Irc.hpp"
-#include <iostream> /* test header */
 #include <sstream>
 
 Irc::Irc(void) {}
