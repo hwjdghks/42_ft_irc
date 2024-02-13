@@ -401,7 +401,7 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 					for (fd_iter = fds.begin() ; fd_iter != fds.end() ; fd_iter++)
 						if ((*cl_it)->getFd() == *fd_iter)
 							break ;
-					if (fd_iter == fds.end())
+					if (!fds.empty() && fd_iter == fds.end())
 					{
 						if ((*cl_it)->isAlive())
 							fds.push_back((*cl_it)->getFd());
