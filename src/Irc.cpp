@@ -56,25 +56,20 @@ t_send_event Irc::executeCommand(int fd, std::string recv_buffer)
 	{
 		// 명령줄 받아보기
 		commandLine = client->getLineOfRead_buffer();
-		std::cerr << "!    cmdline    [" << commandLine << "][" << commandLine.size() << "]" << std::endl;
 		// 만약 문자열이 공백이라면 loop 종료
 		if (commandLine.empty())
 		{
 			std::string tmp = client->getWrite_buffer();
 			client->addWrite_buffer(tmp);
-			std::cerr << "!    send    !\n" << tmp << "\n[" << tmp.size() << "]" << std::endl;
 			break ;
 		}
-		std::cerr << "!    execute    [" << commandLine << "][" << commandLine.size() << "]" << std::endl;
 		// 리시브 메세지 해석
 		IRCMessage recv_msg = parseMessage(commandLine);
 		// 명령어에 따라 동작하기
-		std::cerr << "    cmd    [" << recv_msg.command << "]" << std::endl;
 		if (!client->isRegistered())
 			_register_executor(client, recv_msg);
 		else
 			_command_executor(client, recv_msg);
-		std::cerr << "    (SUCCESS)" << std::endl;
 	}
 	return (send_msg);
 }
@@ -411,7 +406,6 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 					{
 						if ((*cl_it)->isAlive())
 							fds.push_back((*cl_it)->getFd());
-						std::cout << "    [" << (*cl_it)->getFd() << "]\n";
 						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
 					}
 				}
@@ -597,8 +591,6 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 		targets = __getTargets(message.parameters[0]);
 		// loop
 		std::vector<std::string>::iterator target_iter;
-		for (target_iter = targets.begin() ; target_iter != targets.end() ; target_iter++)
-			std::cerr << "[" << *target_iter << "]\n";
 		for (target_iter = targets.begin() ; target_iter != targets.end() ; target_iter++)
 		{
 			if ((*target_iter)[0] == '&' || (*target_iter)[0] == '#')
