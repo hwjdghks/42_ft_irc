@@ -1,6 +1,4 @@
 #include "Irc.hpp"
-#include <sstream>
-
 
 std::string _str_toupper(std::string s)
 {

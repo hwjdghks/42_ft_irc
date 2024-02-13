@@ -1,6 +1,5 @@
 #include "Client.hpp"
 #include "Channel.hpp"
-#include <sstream>
 
 Channel::Channel(void) {
 	option[TITLE] = false;

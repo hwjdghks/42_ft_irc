@@ -1,6 +1,7 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
+#include <sstream>
 #include "def.hpp"
 #include "Client.hpp"
 
