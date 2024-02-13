@@ -19,7 +19,7 @@ bool Server::pasreAndSetArguements(const char * const * argv)
 		return false;
 	this->port = static_cast<in_port_t>(confirm);
 	for(const char *iter = argv[2]; iter && *iter; iter++)
-		if (!std::isprint(*iter))
+		if (!std::isprint(*iter) || std::isspace(*iter))
 			return false;
 	this->password = std::string(argv[2]);
 	return true;
