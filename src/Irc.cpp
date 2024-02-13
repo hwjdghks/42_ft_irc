@@ -403,10 +403,17 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 				{
 					// 각 클라이언트의 fd를 저장
 					// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
-					if ((*cl_it)->isAlive())
-						fds.push_back((*cl_it)->getFd());
-					std::cout << "    [" << (*cl_it)->getFd() << "]\n";
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
+					std::vector<int>::iterator fd_iter;
+					for (fd_iter = fds.begin() ; fd_iter != fds.end() ; fd_iter++)
+						if ((*cl_it)->getFd() == *fd_iter)
+							break ;
+					if (fd_iter == fds.end())
+					{
+						if ((*cl_it)->isAlive())
+							fds.push_back((*cl_it)->getFd());
+						std::cout << "    [" << (*cl_it)->getFd() << "]\n";
+						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
+					}
 				}
 			}
 		}
@@ -994,7 +1001,7 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 						tmp_client = *cl_it;
 					if ((*cl_it)->isAlive())
 						fds.push_back((*cl_it)->getFd());
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " KICK " + iter->getName() + " :" + msg + "\r\n");
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " KICK " + iter->getName() + " " + message.parameters[1] + " :" + msg + "\r\n");
 				}
 			}
 			_setSendEvent(true, true, false, true, fds);
@@ -1051,7 +1058,7 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 			Client *tmp_client = searchClient(message.parameters[0]);
 			if ((tmp_client)->isAlive())
 				fds.push_back((tmp_client)->getFd());
-			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + " INVITE " + tmp_client->getNickname() + " :" + message.parameters[1] + "\r\n");
+			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + " INVITE " + message.parameters[1] + " :" + tmp_client->getNickname() + "\r\n");
 			// 해당 유저를 channel invited에 추가
 			iter->addInvite(tmp_client);
 			_setSendEvent(true, true, false, true, fds);

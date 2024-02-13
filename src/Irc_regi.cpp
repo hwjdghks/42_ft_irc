@@ -172,44 +172,6 @@ IRCMessage Irc::parseMessage(std::string message)
     return ircMessage;
 }
 
-// IRCMessage Irc::parseMessage(std::string message)
-// {
-// 	IRCMessage ircMessage;
-	
-// 	std::istringstream iss(message);
-// 	std::string token;
-
-// 	// Extracting prefix
-// 	if (message[0] == ':') 
-// 	{
-// 		iss >> token;
-// 		ircMessage.prefix = token.substr(1);
-// 	}
-
-// 	// Extracting command
-// 	iss >> token;
-// 	ircMessage.command = _str_toupper(token);
-
-// 	// Extracting parameters
-// 	if (iss >> token)
-// 	{
-// 		if (token.find(":") != std::string::npos)
-// 		{
-// 			iss.seekg((token.length() - 1) * -1, iss.cur);
-// 			std::getline(iss, token);
-// 			ircMessage.parameters.push_back(token);
-// 		}
-// 		else
-// 		{
-// 			ircMessage.parameters.push_back(token);
-// 			while (iss >> token) 
-// 				ircMessage.parameters.push_back(token);
-// 		}
-// 	}
-
-// 	return ircMessage;
-// }
-
 bool Irc::isExistingClient(std::string clName)
 {
 	std::list<Client>::iterator it;
