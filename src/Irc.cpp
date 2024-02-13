@@ -544,6 +544,7 @@ int Irc::__cmd_quit(Client *client, IRCMessage message)
 				{
 					std::vector<std::string>::iterator iter = message.parameters.begin();
 					std::string msg = *iter;
+					iter++;
 					for (; iter != message.parameters.end() ; iter++)
 					{
 						msg = msg + " " + *iter;
