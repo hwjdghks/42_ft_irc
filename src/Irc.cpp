@@ -403,10 +403,17 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 				{
 					// 각 클라이언트의 fd를 저장
 					// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
-					if ((*cl_it)->isAlive())
-						fds.push_back((*cl_it)->getFd());
-					std::cout << "    [" << (*cl_it)->getFd() << "]\n";
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
+					std::vector<int>::iterator fd_iter;
+					for (fd_iter = fds.begin() ; fd_iter != fds.end() ; fd_iter++)
+						if ((*cl_it)->getFd() == *fd_iter)
+							break ;
+					if (fd_iter == fds.end())
+					{
+						if ((*cl_it)->isAlive())
+							fds.push_back((*cl_it)->getFd());
+						std::cout << "    [" << (*cl_it)->getFd() << "]\n";
+						(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
+					}
 				}
 			}
 		}
