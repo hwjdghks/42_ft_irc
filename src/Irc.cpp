@@ -1001,7 +1001,7 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 						tmp_client = *cl_it;
 					if ((*cl_it)->isAlive())
 						fds.push_back((*cl_it)->getFd());
-					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " KICK " + iter->getName() + " :" + msg + "\r\n");
+					(*cl_it)->addWrite_buffer(client->makeClientPrefix() + " KICK " + iter->getName() + " " + message.parameters[1] + " :" + msg + "\r\n");
 				}
 			}
 			_setSendEvent(true, true, false, true, fds);
