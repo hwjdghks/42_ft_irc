@@ -126,7 +126,7 @@ void Server::run(void)
 						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
 							return this->stop();
 					}
-					if (!recvMsg(current_event->ident))
+					else if (!recvMsg(current_event->ident))
 						return this->stop();
 				}
 				else if (current_event->filter == EVFILT_WRITE)
@@ -141,7 +141,7 @@ void Server::run(void)
 						if (!closeClient(current_event->ident, MSG_FAIL_SYSTEM))
 							return this->stop(); /* kevent error */
 					}
-					if (!sendMsg(current_event->ident, current_event->udata))
+					else if (!sendMsg(current_event->ident, current_event->udata))
 						return this->stop();
 				}
 				else if (current_event->filter == EVFILT_TIMER)
