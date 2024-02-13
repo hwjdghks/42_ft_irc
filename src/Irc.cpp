@@ -380,6 +380,7 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 		client->addWrite_buffer(_432_err_erroneusnickname(SERVERURL, client->getNickname(), message.parameters[0]));
 	else
 	{
+		fds.clear();
 		// 동작 timestamp
 		// client가 소속된 channel의 모든 유저에게 전송
 		// current client의 channel size만큼 반복
