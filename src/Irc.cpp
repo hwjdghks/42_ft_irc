@@ -381,12 +381,12 @@ int Irc::__cmd_nick(Client *client, IRCMessage message)
 	else
 	{
 		// 동작 timestamp
+		client->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
 		// client가 소속된 channel의 모든 유저에게 전송
 		// current client의 channel size만큼 반복
 		std::list<Channel *> &channels = client->getChannels();
 		for (std::list<Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
 		{
-			client->addWrite_buffer(client->makeClientPrefix() + " NICK " + message.parameters[0] + "\r\n");
 			// 해당 channel의 send_msg 제작
 			// channel은 user size만큼 반복
 			Channel *curr_ch = *it;
