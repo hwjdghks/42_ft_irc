@@ -65,8 +65,5 @@ private: /* error handling */
 	bool closeClient(int fd);
 	bool closeClient(int fd, const char *msg);
 	void stop(void);
-
-private: /* debug */
-	void printData(struct kevent *e) const;
 };
 #endif
