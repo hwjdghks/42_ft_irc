@@ -1,6 +1,7 @@
 #ifndef IRC_HPP
 # define IRC_HPP
 
+#include <sstream>
 # include "def.hpp"
 # include "Channel.hpp"
 # include "Client.hpp"

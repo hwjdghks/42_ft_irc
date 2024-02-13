@@ -1,5 +1,4 @@
 #include "Irc.hpp"
-#include <sstream>
 
 Irc::Irc(void) {}
 
