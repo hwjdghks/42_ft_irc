@@ -38,8 +38,8 @@
 # define BOTNAME "Manner_bot" // nick 검사할 때 요것도 같이 검사
 
 # define HOST "localhost"
-# define SERVERNAME	"ft_irc"
-# define SERVERURL	":ft_irc.42.fr"
+# define SERVERNAME	"ircserv"
+# define SERVERURL	":" SERVERNAME ".42.fr"
 
 enum {
 	PASS, NICK, USER

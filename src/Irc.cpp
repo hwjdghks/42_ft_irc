@@ -781,9 +781,9 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					chan->delInvite(client->getNickname());
 					std::string topic = chan->getTopic();
 					if (!topic.empty())
-						client->addWrite_buffer(SERVERURL " 332 " + client->getNickname() + " " + chan->getName() + " :" + topic + "\r\n");
-					client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " = " + chan->getName() + " :" + chan_users + "\r\n");
-					client->addWrite_buffer(SERVERURL " 366 " + client->getNickname() + " " + chan->getName() + " :End of /NAMES list." + "\r\n");
+						client->addWrite_buffer(_332_rpl_(SERVERURL, client->getNickname(), chan->getName(), topic));
+					client->addWrite_buffer(_353_rpl_(SERVERURL, client->getNickname(), chan->getName(), chan_users));
+					client->addWrite_buffer(_366_rpl_(SERVERURL, client->getNickname(), chan->getName()));
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
 				}
@@ -1335,12 +1335,12 @@ int Irc::__cmd_mode(Client *client, IRCMessage message)
 			}
 			for (; opt_iter != options.end() ; opt_iter++)
 			{
-				client->addWrite_buffer(SERVERURL " 501 " + message.parameters[0] + " " + *opt_iter + ":is not a recognised user mode." + "\r\n");
+				client->addWrite_buffer(_501_err_(SERVERURL, message.parameters[0], *opt_iter));
 			}
 		}
 		else //502
 		{
-			client->addWrite_buffer(SERVERURL " 502 " + message.parameters[0] + ":Can't view modes for other users" + "\r\n");
+			client->addWrite_buffer(_502_err_(SERVERURL, message.parameters[0]));
 		}
 	}
 	return (SUCCESS);

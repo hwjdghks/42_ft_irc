@@ -113,3 +113,15 @@ std::string Irc::_696_err_invalidmodeparam(std::string prefix, std::string clien
 	std::string str = prefix + " 467 " + clientnick + " " + channelname + " :need more param" + "\r\n";
 	return (str);
 }
+
+std::string Irc::_501_err_(std::string prefix, std::string clientnick, char opt)
+{
+	std::string str = prefix + " 501 " + clientnick + " " + opt + " :is not a recognised user mode." + "\r\n";
+	return (str);
+}
+
+std::string Irc::_502_err_(std::string prefix, std::string clientnick)
+{
+	std::string str = prefix + " 502 " + clientnick + " :Can't view modes for other users" + "\r\n";
+	return (str);
+}
