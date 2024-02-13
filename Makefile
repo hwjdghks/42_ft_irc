@@ -37,7 +37,7 @@ re:
 	make all
 
 server: re
-	./ircserv 16667 password
+	./ircserv 16667 "password"
 
 client:
 	irssi -c 127.0.0.1 -p 16667 -n nickname -w password
