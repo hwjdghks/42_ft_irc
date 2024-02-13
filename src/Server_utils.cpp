@@ -1,7 +1,4 @@
 #include "Server.hpp"
-/* Dubug Header */
-#include <iostream>
-/* Debug Header end */
 
 /************************************************************
  *															*
@@ -135,12 +132,7 @@ bool Server::sendMsg(const int &fd, void *udata)
 		return closeClient(fd, MSG_FAIL_SYSTEM);
 	if (static_cast<std::size_t>(len) < buf.size())
 	{
-		/* 
-		 * need buffer roll back 
-		 * size는 버퍼에 카피한 사이즈.
-		 * 해당 사이즈를 제외한 나머지를 롤백해야함.
-		 */
-		sender->rollbackBuf(buf/* 가져온 원본 버퍼 */, len/* 복사가 완료된 영역의 크기 */);
+		sender->rollbackBuf(buf, len);
 	}
 	else if (!offWriteEvnet(fd))
 		return false;
@@ -350,19 +342,3 @@ void Server::stop(void)
 	close(kq);
 	close(server_fd);
 }
-
-/************************************************************
- *															*
- *						DEBUG Function						*
- * 															*
- ************************************************************/
-
-/* Debug code */
-void Server::printData(struct kevent *e) const
-{
-	std::cout << "flags: " << e->flags << '\n';
-	std::cout << "fflags : " << e->fflags << '\n';
-	std::cout << "data : " << e->data << '\n';
-	std::cout << "udata: " << e->udata << '\n';
-}
-/* Debug code end */
