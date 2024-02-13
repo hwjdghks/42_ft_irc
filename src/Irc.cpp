@@ -1058,7 +1058,7 @@ int Irc::__cmd_invite(Client *client, IRCMessage message)
 			Client *tmp_client = searchClient(message.parameters[0]);
 			if ((tmp_client)->isAlive())
 				fds.push_back((tmp_client)->getFd());
-			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + " INVITE " + tmp_client->getNickname() + " :" + message.parameters[1] + "\r\n");
+			(tmp_client)->addWrite_buffer(client->makeClientPrefix() + " INVITE " + message.parameters[1] + " :" + tmp_client->getNickname() + "\r\n");
 			// 해당 유저를 channel invited에 추가
 			iter->addInvite(tmp_client);
 			_setSendEvent(true, true, false, true, fds);
