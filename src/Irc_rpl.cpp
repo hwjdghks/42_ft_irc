@@ -63,15 +63,16 @@ std::string Irc::_324_rpl_channelmodeis(std::string prefix, std::string clientni
 
 std::string Irc::_332_rpl_(std::string prefix, std::string clientnick, std::string channelname, std::string topic)
 {
-	std::string str = prefix + " 332 " + clientnick + " " + channelname + topic + "\r\n";
+	std::string str = prefix + " 332 " + clientnick + " " + channelname + " :" + topic + "\r\n";
 	return (str);
 }
 
 std::string Irc::_353_rpl_(std::string prefix, std::string clientnick, std::string channelname, std::string chan_users)
 {
-	std::string str = prefix + " 353 " + clientnick + " = " + channelname + chan_users + "\r\n";
+	std::string str = prefix + " 353 " + clientnick + " = " + channelname + " :" + chan_users + "\r\n";
 	return (str);
 }
+
 std::string Irc::_366_rpl_(std::string prefix, std::string clientnick, std::string channelname)
 {
 	std::string str = prefix + " 366 " + clientnick + " " + channelname + " :End of /NAMES list." +"\r\n";
