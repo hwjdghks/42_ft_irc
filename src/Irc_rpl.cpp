@@ -24,9 +24,9 @@ std::string Irc::_323_rpl_listend(std::string prefix, std::string clientnick)
 	return (str);
 }
 
-std::string Irc::_352_rpl_whoreply(std::string prefix, std::string clientnick, std::string channelname, std::string username, std::string nickname, std::string op, std::string realname)
+std::string Irc::_352_rpl_whoreply(std::string prefix, std::string clientnick, std::string channelname, std::string username, std::string hostname, std::string nickname, std::string op, std::string realname)
 {
-	std::string str = prefix + " 352 " + clientnick + " " + channelname + " " + username + " " + HOST + " " + SERVERNAME + " " + nickname + " H" + op + " :0";
+	std::string str = prefix + " 352 " + clientnick + " " + channelname + " " + username + " " + hostname + " " + SERVERNAME + " " + nickname + " H" + op + " :0";
 	str += " " + realname + "\r\n";
 	return (str);
 }

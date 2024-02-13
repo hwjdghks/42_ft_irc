@@ -76,7 +76,7 @@ private: // irc_rpl.cpp
 	std::string _321_rpl_liststart(std::string prefix, std::string clientnick);
 	std::string _322_rpl_list(std::string prefix, std::string clientnick, std::string channelname, std::string usercnt, std::string topic);
 	std::string _323_rpl_listend(std::string prefix, std::string clientnick);
-	std::string _352_rpl_whoreply(std::string prefix, std::string clientnick, std::string channelname, std::string username, std::string nickname, std::string op, std::string realname);
+	std::string _352_rpl_whoreply(std::string prefix, std::string clientnick, std::string channelname, std::string username, std::string hostname, std::string nickname, std::string op, std::string realname);
 	std::string _315_rpl_endofwho(std::string prefix, std::string clientnick, std::string channelname);
 	std::string _331_rpl_notopic(std::string prefix, std::string clientnick, std::string channelname);
 	std::string _332_rpl_topic(std::string prefix, std::string clientnick, std::string channelname, std::string topic);

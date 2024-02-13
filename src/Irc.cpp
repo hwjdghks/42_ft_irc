@@ -510,9 +510,9 @@ int Irc::__cmd_who(Client *client, IRCMessage message)
 		{
 			// RPL_352_rpl_whoreply
 			if (chan->isOperator((*cl_it)->getNickname()))
-				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(),  (*cl_it)->getNickname(), "@", (*cl_it)->getRealname()));
+				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(), (*cl_it)->getHostname(),  (*cl_it)->getNickname(), "@", (*cl_it)->getRealname()));
 			else
-				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(),  (*cl_it)->getNickname(), "", (*cl_it)->getRealname()));
+				client->addWrite_buffer(_352_rpl_whoreply(SERVERURL, (*cl_it)->getNickname(), message.parameters[0], (*cl_it)->getUsername(), (*cl_it)->getHostname(),  (*cl_it)->getNickname(), "", (*cl_it)->getRealname()));
 		}
 		// RPL_315_rpl_endofwho
 		client->addWrite_buffer(_315_rpl_endofwho(SERVERURL, client->getNickname(), message.parameters[0]));
