@@ -55,7 +55,7 @@ private: /* manage kevent */
 	bool onWriteEvent(const int &fd) const;
 
 	bool offReadEvent(const int &fd) const;
-	bool offWriteEvnet(const int &fd) const;
+	bool offWriteEvent(const int &fd) const;
 
 	bool delTimerEvent(const int &fd) const;
 

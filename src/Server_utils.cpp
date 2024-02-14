@@ -134,7 +134,7 @@ bool Server::sendMsg(const int &fd, void *udata)
 	{
 		sender->rollbackBuf(buf, len);
 	}
-	else if (!offWriteEvnet(fd))
+	else if (!offWriteEvent(fd))
 		return false;
 	if ((!sender->isAlive())) /* 클라이언트를 종료시켜야할 경우 */
 		return closeClient(fd);
@@ -218,7 +218,7 @@ bool Server::setRegisterEvent(const int &fd) const
 		return false;
 	if (!addWriteEvent(fd))
 		return false;
-	if (!offWriteEvnet(fd))
+	if (!offWriteEvent(fd))
 		return false;
 	if (!addTimerEvent(fd, TIMEOUT_REGISTER, UDATA_CHECK_REIGISTER))
 		return false;
@@ -281,7 +281,7 @@ bool Server::offReadEvent(const int &fd) const
 	return this->setEvent(&change_event);
 }
 
-bool Server::offWriteEvnet(const int &fd) const
+bool Server::offWriteEvent(const int &fd) const
 {
 	struct kevent change_event;
 
