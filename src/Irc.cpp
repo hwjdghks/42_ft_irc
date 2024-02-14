@@ -978,6 +978,7 @@ int Irc::__cmd_kick(Client *client, IRCMessage message)
 			param_iter++;
 			param_iter++;
 			std::string msg = *param_iter;
+			param_iter++;
 			for (; param_iter != message.parameters.end() ; param_iter++)
 			{
 				msg = msg + " " + *param_iter;
