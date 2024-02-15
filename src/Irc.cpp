@@ -617,30 +617,31 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 						msg = msg + " " + *param_iter;
 					}
 
-					// if (메세지 내용이 BOTNAME" COMMAND") // BOTNAME
-					// {
-					// 	if (chan->isUser(BOTNAME))
-					// 	{
-					// 		Client *bot = chan->getBot();
-					// 		// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
-					// 		std::string bot_msg = "cmd1 cmd2 cmd3 ...";
-					// 		reply_msg = bot->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + bot_msg + "\r\n";
-					// 	}
-					// }
-					// else
+					if (msg.compare(BOTNAME" commend")) // BOTNAME
+					{
+						if (chan->isUser(client->getNickname()))
+						{
+							// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
+							std::string bot_msg = "My command is nothing";
+							reply_msg = BOTPRIFIX " PRIVMSG " + *target_iter + " :" + bot_msg + "\r\n";
+						}
+						fds.push_back(client->getFd());
+						client->addWrite_buffer(reply_msg);
+					}
+					else
 					{
 						reply_msg = client->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + msg + "\r\n";
-					}
-					std::list<Client *> client_list = chan->getUsers();
-					for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
-					{
-						if (!(*cl_it)->isBot() && client != *cl_it)
+						std::list<Client *> client_list = chan->getUsers();
+						for (std::list<Client *>::iterator cl_it = client_list.begin(); cl_it != client_list.end(); cl_it++)
 						{
-							// 각 클라이언트의 fd를 저장
-							// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
-							if ((*cl_it)->isAlive())
-								fds.push_back((*cl_it)->getFd());
-							(*cl_it)->addWrite_buffer(reply_msg);
+							if (!(*cl_it)->isBot() && client != *cl_it)
+							{
+								// 각 클라이언트의 fd를 저장
+								// 각 클라이언트의 send_buffer에 send_msg를 이어붙이기 (add)
+								if ((*cl_it)->isAlive())
+									fds.push_back((*cl_it)->getFd());
+								(*cl_it)->addWrite_buffer(reply_msg);
+							}
 						}
 					}
 					_setSendEvent(true, true, false, true, fds);
@@ -728,8 +729,10 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 				client->addWrite_buffer(client->makeClientPrefix() + " JOIN :" + *chan_iter + "\r\n");
 
 				Channel *chan = searchChannel(*chan_iter);
-				client->addWrite_buffer(SERVERURL " 353 " + client->getNickname() + " = " + chan->getName() + " :@" + client->getNickname() + "\r\n");
-				client->addWrite_buffer(SERVERURL " 366 " + client->getNickname() + " " + chan->getName() + " :End of /NAMES list." + "\r\n");
+				std::string chan_users = "@" + client->getNickname() + " ";
+				chan_users += BOTNAME;
+				client->addWrite_buffer(_353_rpl_(SERVERURL, client->getNickname(), chan->getName(), chan_users));
+				client->addWrite_buffer(_366_rpl_(SERVERURL, client->getNickname(), chan->getName()));
 				_setSendEvent(true, true, false, true, fds);
 				fds.clear();
 			}
@@ -772,10 +775,12 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					// 초대 리스트에서 삭제
 					chan->delInvite(client->getNickname());
 					std::string topic = chan->getTopic();
+					chan_users += BOTNAME;
 					if (!topic.empty())
 						client->addWrite_buffer(_332_rpl_(SERVERURL, client->getNickname(), chan->getName(), topic));
 					client->addWrite_buffer(_353_rpl_(SERVERURL, client->getNickname(), chan->getName(), chan_users));
 					client->addWrite_buffer(_366_rpl_(SERVERURL, client->getNickname(), chan->getName()));
+					client->addWrite_buffer(BOTPRIFIX " PRIVMSG " + chan->getName() + " :" + CHATMANNER + "\r\n");
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
 				}
