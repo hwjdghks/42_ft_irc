@@ -617,7 +617,7 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 						msg = msg + " " + *param_iter;
 					}
 
-					if (msg.compare(BOTNAME" commend")) // BOTNAME
+					if (msg.compare(BOTNAME" command") == 0) // BOTNAME
 					{
 						if (chan->isUser(client->getNickname()))
 						{
