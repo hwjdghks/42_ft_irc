@@ -37,6 +37,7 @@
 
 # define BOTNAME "Manner_bot" // nick 검사할 때 요것도 같이 검사
 # define CHATMANNER "Please do not use bad words!"
+# define INTRODUCEBOT "If you want to use my funtion, Try [Manner_bot command]!"
 # define BOTPRIFIX ":" BOTNAME "!ircserv@ircserv.42.fr"
 
 # define HOST "localhost"

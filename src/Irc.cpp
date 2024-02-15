@@ -733,6 +733,8 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 				chan_users += BOTNAME;
 				client->addWrite_buffer(_353_rpl_(SERVERURL, client->getNickname(), chan->getName(), chan_users));
 				client->addWrite_buffer(_366_rpl_(SERVERURL, client->getNickname(), chan->getName()));
+				client->addWrite_buffer(BOTPRIFIX " PRIVMSG " + chan->getName() + " :" + CHATMANNER + "\r\n");
+				client->addWrite_buffer(BOTPRIFIX " PRIVMSG " + chan->getName() + " :" + INTRODUCEBOT + "\r\n");
 				_setSendEvent(true, true, false, true, fds);
 				fds.clear();
 			}
@@ -781,6 +783,7 @@ int Irc::__cmd_join(Client *client, IRCMessage message)
 					client->addWrite_buffer(_353_rpl_(SERVERURL, client->getNickname(), chan->getName(), chan_users));
 					client->addWrite_buffer(_366_rpl_(SERVERURL, client->getNickname(), chan->getName()));
 					client->addWrite_buffer(BOTPRIFIX " PRIVMSG " + chan->getName() + " :" + CHATMANNER + "\r\n");
+					client->addWrite_buffer(BOTPRIFIX " PRIVMSG " + chan->getName() + " :" + INTRODUCEBOT + "\r\n");
 					_setSendEvent(true, true, false, true, fds);
 					fds.clear();
 				}
