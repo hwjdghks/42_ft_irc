@@ -10,7 +10,6 @@ class Channel
 private:
 	bool					option[4];
 	size_t					limit;
-	Client					bot;
 	std::string				password;
 	std::string				topic;
 	std::string				name;
@@ -48,7 +47,6 @@ public:
 
 	void setLimit(size_t);
 	size_t getLimit(void);
-	Client *getBot();
 
 	bool isKey(std::string);
 	bool isFull();

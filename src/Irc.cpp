@@ -622,8 +622,21 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 						if (chan->isUser(client->getNickname()))
 						{
 							// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
-							std::string bot_msg = "My command is nothing";
+							std::string bot_msg = "My command is [king's man]";
 							reply_msg = BOTPRIFIX " PRIVMSG " + *target_iter + " :" + bot_msg + "\r\n";
+						}
+						fds.push_back(client->getFd());
+						client->addWrite_buffer(reply_msg);
+					}
+					else if (msg.compare(BOTNAME" king's man") == 0)
+					{
+						if (chan->isUser(client->getNickname()))
+						{
+							// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
+							reply_msg = BOTPRIFIX " PRIVMSG " + *target_iter + " :"  "Manners, Maketh, Man." "\r\n";
+							reply_msg += BOTPRIFIX " PRIVMSG " + *target_iter + " :"  "Do you know what that means?" "\r\n";
+							reply_msg += BOTPRIFIX " PRIVMSG " + *target_iter + " :"  "Then let me teach you a lesson." "\r\n";
+							reply_msg += BOTPRIFIX " PRIVMSG " + *target_iter + " :"  "*** Throw a glass ***" "\r\n";
 						}
 						fds.push_back(client->getFd());
 						client->addWrite_buffer(reply_msg);
