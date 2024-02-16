@@ -622,9 +622,23 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 						if (chan->isUser(client->getNickname()))
 						{
 							// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
-							std::string bot_msg = "My command is [king's man]";
+							std::string bot_msg = "My command is [rule/king's man]";
 							reply_msg = BOTPRIFIX " PRIVMSG " + *target_iter + " :" + bot_msg + "\r\n";
 						}
+						else
+							reply_msg = BOTPRIFIX " PRIVMSG " + client->getNickname() + " :Only channer's member can use bot!" "\r\n";
+						fds.push_back(client->getFd());
+						client->addWrite_buffer(reply_msg);
+					}
+					else if (msg.compare(BOTNAME" rule") == 0)
+					{
+						if (chan->isUser(client->getNickname()))
+						{
+							// bot 동작시키기 == 미리 설정해둔 대답 꺼내오기
+							reply_msg = BOTPRIFIX " PRIVMSG " + *target_iter + " :"  "Rule no.1 : Do not use a bad words!" "\r\n";
+						}
+						else
+							reply_msg = BOTPRIFIX " PRIVMSG " + client->getNickname() + " :Only channer's member can use bot!" "\r\n";
 						fds.push_back(client->getFd());
 						client->addWrite_buffer(reply_msg);
 					}
@@ -638,6 +652,8 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 							reply_msg += BOTPRIFIX " PRIVMSG " + *target_iter + " :"  "Then let me teach you a lesson." "\r\n";
 							reply_msg += BOTPRIFIX " PRIVMSG " + *target_iter + " :"  "*** Throw a glass ***" "\r\n";
 						}
+						else
+							reply_msg = BOTPRIFIX " PRIVMSG " + client->getNickname() + " :Only channer's member can use bot!" "\r\n";
 						fds.push_back(client->getFd());
 						client->addWrite_buffer(reply_msg);
 					}
