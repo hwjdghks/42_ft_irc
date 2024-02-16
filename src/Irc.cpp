@@ -641,6 +641,13 @@ int Irc::__cmd_privmsg(Client *client, IRCMessage message)
 						fds.push_back(client->getFd());
 						client->addWrite_buffer(reply_msg);
 					}
+                    else if (___check_slang(msg))
+                    {
+                        std::string bot_msg = "Do not use bad words!!!";
+                        reply_msg = BOTPRIFIX " PRIVMSG " + *target_iter + " :" + bot_msg + "\r\n";
+                        fds.push_back(client->getFd());
+                        client->addWrite_buffer(reply_msg);                     
+                    }
 					else
 					{
 						reply_msg = client->makeClientPrefix() + " PRIVMSG " + *target_iter + " :" + msg + "\r\n";

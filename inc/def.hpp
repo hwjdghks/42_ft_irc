@@ -44,6 +44,8 @@
 # define SERVERNAME	"ircserv"
 # define SERVERURL	":" SERVERNAME ".42.fr"
 
+# define BADWORDS {"shit", "fuck", "damn", "chink", "nigger"}
+
 enum {
 	PASS, NICK, USER
 };
