@@ -215,7 +215,7 @@ bool Irc::___check_slang(const std::string &msg)
 {
     std::string slangs[] = BADWORDS;
     std::string tmpMsg = _str_toupper(msg);
-    for(size_t i = 0; i <= slangs->length(); i++)
+    for(size_t i = 0; i < sizeof(slangs) / sizeof(slangs[0]); i++)
     {
         if (tmpMsg.find(_str_toupper(slangs[i])) != std::string::npos)
             return true;
